@@ -37,6 +37,7 @@ async function shoot(viewport, scale, outDir, suffix = '') {
     const pg = await browser.newPage({ viewport, deviceScaleFactor: scale });
     await pg.goto(base);
     await pg.waitForSelector('.shot');
+    await pg.locator('#projects-dir').evaluate((el) => { el.textContent = 'projects/'; });
     await go(pg);
     // On phones the sidebar and run bar stack above the content; start each shot at the tabs instead.
     if (viewport.width < 760) await pg.evaluate(() => document.querySelector('#tabs').scrollIntoView());

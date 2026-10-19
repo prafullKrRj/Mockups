@@ -54,15 +54,18 @@ deck was given as the reference, so the tool designed its own listing in the sam
 
 ## Dashboard tour
 
+The dashboard uses a forest-green sidebar, an ivory workspace, and a responsive five-step workflow.
+Search projects by name, track screenshot-to-export progress, and expand generation settings when you need them.
+
 | | |
 |---|---|
-| **Inputs**: app info and per-screen descriptions<br>![](samples/dashboard/01-inputs.png) | **Theme gallery**: one click per preset, live warnings<br>![](samples/dashboard/02-theme-gallery.png) |
+| **Inputs**: app info, copy counters and per-screen descriptions<br>![](samples/dashboard/01-inputs.png) | **Theme gallery**: six curated themes, with all presets available to browse<br>![](samples/dashboard/02-theme-gallery.png) |
 | **Slide editor**: layout, screenshots and copy per slide<br>![](samples/dashboard/03-slide-editor.png) | **Previews** with a QA badge on every slide<br>![](samples/dashboard/04-previews.png) |
 | **HTML editor**: hand edits survive re-renders<br>![](samples/dashboard/05-html-editor.png) | **Export**: PNGs at 1×, 1.5× or 2×, plus a zip<br>![](samples/dashboard/06-export.png) |
-| **Store preview**: the deck at real Play thumbnail size<br>![](samples/dashboard/07-store-preview.png) | **Generate log**: the agent pipeline, live<br>![](samples/dashboard/08-generate-log.png) |
+| **Store preview**: the deck at real Play thumbnail size<br>![](samples/dashboard/07-store-preview.png) | **Activity**: live job output, available to reopen after closing<br>![](samples/dashboard/08-generate-log.png) |
 
-The dashboard also has **Duplicate** (try a variant theme on a copy), **⌘/Ctrl + S** to save, a reference strip next
-to the previews, and a phone-friendly layout.
+The dashboard also has **Duplicate** to try a theme on a copy, keyboard-accessible uploads and previews,
+**⌘/Ctrl + S** to save the current editor, and layouts that adapt from desktop to phone.
 
 ---
 
@@ -75,8 +78,10 @@ npm run demo                 # builds projects/demo and renders it (no AI)
 npm start                    # dashboard → http://localhost:4280
 ```
 
-You need Node 20+, and at least one agent CLI on your `PATH` and logged in: `claude`, `codex` or `muse`. Check with
-`node src/cli.js agents`.
+You need Node 20+ and Playwright's Chromium browser. Agent CLIs are optional: expand **Generation settings** and
+choose **Heuristic (no AI)** for Planner, **Template only** for Builder, and **Skip translation** for Translator
+to generate locally without an AI agent. For AI planning or refinement, install and log in to `claude`, `codex`
+or `muse` on your `PATH`. Check availability with `node src/cli.js agents`.
 
 ### Your own app in 4 steps
 
@@ -169,16 +174,35 @@ agents, for example `--planner codex --builder claude`. Use `--model <id>` to pi
 
 ## Dashboard (`npm start`)
 
-1. **Inputs**: app info form, drag-and-drop screenshots with per-screen title, description and priority, reference
-   images, icon.
-2. **Plan & theme**: a one-click theme gallery, then every theme token and every slide field as a form, or raw JSON. Add, reorder or delete slides.
-   Live validation. *Quick plan (no AI)* builds an instant draft.
-3. **Preview & edit**: live HTML previews with QA status. Click a slide to edit its HTML in place. Edited slides become
-   `custom` and survive re-renders. *Reset to template* undoes this.
-4. **Export**: 1× / 1.5× / 2× PNGs, per-file download, or a zip of everything.
+1. **Inputs**: app info with live copy counters, drag-and-drop or keyboard-accessible uploads, per-screen title,
+   description and priority, reference images, and an app icon.
+2. **Plan & theme**: six curated themes, with the full gallery available through **Browse all**. Edit theme tokens
+   and slide fields, or use raw JSON. Add, reorder or delete slides. **Save & return to form** validates raw JSON
+   before leaving the editor. **Quick plan (no AI)** builds an instant draft.
+3. **Preview & edit**: responsive HTML previews with QA status. Click a slide, or focus it and press Enter, to edit
+   its HTML. Edited slides become `custom` and survive re-renders. **Reset to template** undoes this.
+4. **Export**: 1× / 1.5× / 2× PNGs, per-file downloads, or a ZIP of everything. Export becomes available when previews
+   exist; ZIP download becomes available after export. Repeated clicks cannot start overlapping exports.
 5. **Store preview**: a Google Play listing mock-up with your feature graphic, icon and screenshots at real size.
 
-**Generate** runs the whole pipeline with the planner and builder you choose, and streams logs live.
+**Generate listing** runs the pipeline with the agents selected in **Generation settings**, which also contains
+locale, translation, model and round controls. **Activity** reopens job output; running jobs can be cancelled there.
+
+The save indicator distinguishes saved, unsaved and saving states. App and plan drafts survive saves in the other
+editor, uploads, and failed save requests. Edits made while a save is pending remain unsaved rather than being
+overwritten by its response. Switching projects or leaving the page prompts before discarding pending app or plan edits.
+
+## Verification
+
+```bash
+npm test                  # schema, plans, locales and server checks
+npm run test:dashboard    # Chromium browser regression checks
+```
+
+The dashboard check starts its own local server and uses disposable projects. It covers project creation and search,
+all upload types, theme selection, JSON validation, keyboard HTML editing, template-based generation, PNG and ZIP
+export, activity controls, draft preservation, slow and failed saves, and project switching. It checks page overflow
+at 1440, 768, 390 and 320 pixels. No agent CLI or AI credentials are needed; existing projects are left untouched.
 
 ## CLI
 
