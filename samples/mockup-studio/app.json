@@ -1,0 +1,71 @@
+{
+  "name": "Mockup Studio",
+  "packageName": "local · open source",
+  "category": "tools",
+  "shortDescription": "Turn raw app screenshots into a polished store listing",
+  "fullDescription": "Mockup Studio plans, designs and exports Play Store screenshots and feature graphics from your raw app screenshots. A planner agent writes the deck, a template engine renders it, a builder agent refines it, and code guardrails check every slide. Edit anything in the dashboard.",
+  "audience": "Indie Android developers shipping their own apps",
+  "tone": "calm, precise, practical; no hype",
+  "brandColors": [
+    "#7C6CFF",
+    "#A597FF"
+  ],
+  "features": [
+    "AI planner and builder agents",
+    "Theme gallery with calm presets",
+    "Copy a reference look",
+    "Live previews and HTML editor",
+    "Play Store preview",
+    "One-click PNG export"
+  ],
+  "facts": [
+    "Runs locally",
+    "Claude, Codex or Muse",
+    "Play-ready PNGs"
+  ],
+  "locale": "en-US",
+  "slideCount": 7,
+  "screens": {
+    "01-inputs.png": {
+      "title": "Inputs",
+      "description": "App info form and screenshots with a description and priority per screen",
+      "priority": 6
+    },
+    "02-theme-gallery.png": {
+      "title": "Theme gallery",
+      "description": "One-click calm presets with live font and colour swatches, plus validation warnings",
+      "priority": 9
+    },
+    "03-slide-editor.png": {
+      "title": "Slide editor",
+      "description": "Per-slide layout, screenshot, headline, highlight and subline fields",
+      "priority": 5
+    },
+    "04-previews.png": {
+      "title": "Previews",
+      "description": "Live rendered slides with a QA status badge on each",
+      "priority": 10
+    },
+    "05-html-editor.png": {
+      "title": "HTML editor",
+      "description": "Edit any slide by hand next to a live preview; edits survive re-renders",
+      "priority": 4
+    },
+    "06-export.png": {
+      "title": "Export",
+      "description": "Play-ready PNGs at 1×, 1.5× or 2× plus a zip download",
+      "priority": 7
+    },
+    "07-store-preview.png": {
+      "title": "Store preview",
+      "description": "The listing as it looks on Google Play, screenshots at real thumbnail size",
+      "priority": 8
+    },
+    "08-generate-log.png": {
+      "title": "Generate log",
+      "description": "Live log of the agent pipeline with guardrail results per slide",
+      "priority": 3
+    }
+  },
+  "notes": "The screenshots are of the Mockup Studio dashboard itself (dark UI, violet accent) showing a SubTrack project. The reference image is a deck this tool produced; match its look."
+}

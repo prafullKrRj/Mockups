@@ -52,7 +52,7 @@ function setProject(p) {
   state.plan = p.plan ? structuredClone(p.plan) : null;
   state.bust = Date.now();
   $('#p-title').textContent = p.app.name;
-  $('#p-sub').textContent = `${p.dir} · ${p.screenshots.length} screenshots · ${p.references.length} reference · ${p.plan ? `plan by ${p.plan.generatedBy ?? 'hand'}` : 'no plan'}`;
+  $('#p-sub').textContent = `projects/${p.name} · ${p.screenshots.length} screenshots · ${p.references.length} reference · ${p.plan ? `plan by ${p.plan.generatedBy ?? 'hand'}` : 'no plan'}`;
   renderInputs();
   renderPlan();
   renderPreviews();
@@ -413,7 +413,8 @@ function showTab(tab) {
 
 async function init() {
   state.meta = await api('/api/meta');
-  $('#projects-dir').textContent = state.meta.projectsDir;
+  $('#projects-dir').textContent = `${state.meta.projectsDir.split('/').slice(-2).join('/')}/`;
+  $('#projects-dir').title = state.meta.projectsDir;
   const agentOpts = (first) => [`<option value="${first}">${first === 'heuristic' ? 'Heuristic (no AI)' : 'Template only'}</option>`,
     ...state.meta.agents.map((a) => `<option value="${a.id}" ${a.path ? '' : 'disabled'}>${h(a.label)}${a.path ? '' : ' (not installed)'}</option>`)].join('');
   $('#planner').innerHTML = agentOpts('heuristic');

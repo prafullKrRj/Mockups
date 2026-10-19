@@ -7,13 +7,14 @@ import { loadProject } from '../src/core/project.js';
 
 const names = process.argv.slice(2);
 if (!names.length) {
-  console.log('usage: node scripts/collect-samples.js <project> [...]');
+  console.log('usage: node scripts/collect-samples.js <project>[:<sample-name>] [...]');
   process.exit(1);
 }
 
-for (const name of names) {
+for (const arg of names) {
+  const [name, alias = name] = arg.split(':');
   const p = await loadProject(name);
-  const out = path.join(ROOT, 'samples', name);
+  const out = path.join(ROOT, 'samples', alias);
   await fs.rm(out, { recursive: true, force: true });
   await fs.mkdir(path.join(out, 'slides'), { recursive: true });
   await sharp(path.join(p.paths.runs, 'contact-sheet.png')).png({ compressionLevel: 9, palette: false }).toFile(path.join(out, 'deck.png'));
@@ -24,5 +25,5 @@ for (const name of names) {
   }
   await fs.copyFile(p.paths.plan, path.join(out, 'plan.json'));
   await fs.copyFile(p.paths.app, path.join(out, 'app.json'));
-  console.log(`samples/${name}: deck.png, ${p.exports.feature.length} feature graphic, ${p.exports.phone.length} slides, plan.json, app.json`);
+  console.log(`samples/${alias}: deck.png, ${p.exports.feature.length} feature graphic, ${p.exports.phone.length} slides, plan.json, app.json`);
 }
