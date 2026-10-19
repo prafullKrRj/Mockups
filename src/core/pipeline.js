@@ -25,7 +25,7 @@ function projectBrief(project) {
 
 async function plannerPrompt(project, { palette, previousErrors }) {
   const schema = await fs.readFile(path.join(SCHEMAS_DIR, 'plan.schema.json'), 'utf8');
-  const skills = ['planner.md', 'visual-craft.md', 'play-store-specs.md', 'aso-copywriting.md', 'design-system.md', 'guardrails.md',
+  const skills = ['planner.md', 'visual-craft.md', 'vendor/frontend-design/SKILL.md', 'play-store-specs.md', 'aso-copywriting.md', 'design-system.md', 'guardrails.md',
     ...(project.references.length ? ['theme-replication.md'] : [])];
   return `You are the Listing Planner agent of Mockup Studio. Your working directory is the project folder.
 Follow the skills below exactly. Your ONLY deliverable is the file \`plan.json\` in the working directory.
@@ -43,7 +43,7 @@ Now look at every image listed, then write \`plan.json\`. Do not create or modif
 }
 
 async function builderPrompt(project, { round, exported }) {
-  const skills = ['builder.md', 'visual-craft.md', 'design-system.md', 'guardrails.md', 'play-store-specs.md',
+  const skills = ['builder.md', 'visual-craft.md', 'vendor/frontend-design/SKILL.md', 'design-system.md', 'guardrails.md', 'play-store-specs.md',
     ...(project.references.length ? ['theme-replication.md'] : [])];
   const qa = project.qa ? JSON.stringify(project.qa.slides, null, 2) : '{}';
   const html = await fs.readFile(path.join(project.paths.build, `${project.plan.slides[0].id}.html`), 'utf8');
