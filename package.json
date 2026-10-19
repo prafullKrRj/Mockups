@@ -1,0 +1,26 @@
+{
+  "name": "mockup-studio",
+  "version": "1.0.0",
+  "description": "Autonomous AI Play Store listing graphics generator",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github-personal:prafullKrRj/Mockups.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "private": "true",
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "archiver": "^8.0.0",
+    "express": "^5.3.0",
+    "multer": "^2.4.0",
+    "playwright": "^1.64.1",
+    "sharp": "^0.35.5"
+  }
+}

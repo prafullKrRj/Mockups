@@ -1,0 +1,9 @@
+node_modules/
+.DS_Store
+*.log
+# user projects stay local; only the demo is tracked
+projects/*
+!projects/demo/
+projects/demo/build/
+projects/demo/export/
+projects/demo/.runs/
