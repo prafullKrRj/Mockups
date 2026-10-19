@@ -46,7 +46,7 @@ export function createApp() {
   app.get('/api/projects', wrap(async (_req, res) => res.json(await listProjects())));
 
   app.post('/api/themes/resolve', wrap(async (req, res) => {
-    validateThemeSelection(req.body);
+    validateThemeSelection(req.body ?? null);
     if (req.body.mode === 'auto') return res.status(422).json({ error: 'Select a preset or Material palette to preview; AI selection uses the planner.' });
     res.json(selectedTheme({ themeSelection: req.body }));
   }));

@@ -118,7 +118,7 @@ input/screenshots + app.json (+ reference images)
         ▼  guardrail: JSON schema, files exist, highlight ⊂ headline, policy copy, WCAG contrast
         │  (rejected → errors fed back, up to 3 tries → heuristic fallback)
  ┌──────────────┐
- │ RENDERER     │  src/templates: 10 theme presets, 8 phone layouts, 3 feature-graphic layouts,
+ │ RENDERER     │  src/templates: 39 theme presets, 8 phone layouts, 3 feature-graphic layouts,
  │ (deterministic)│ CSS Android frame, auto-fit headlines → build/<slide>.html
  └──────┬───────┘
         ▼
@@ -221,6 +221,30 @@ npm test
 Projects live in `projects/` (git-ignored except the demo). Set `MOCKUP_PROJECTS_DIR` to keep them elsewhere.
 
 ## Themes & layouts
+
+**39 presets:** the original 15 plus 24 Material options. Violet, indigo, blue, cyan, teal, emerald, lime,
+amber, coral, rose, plum and slate each have light and dark variants (`material-teal-light`, for example).
+
+In **Plan & theme → Choose your theme**, pick a preset or choose **Custom Material colors** to supply primary,
+secondary and tertiary colors plus light/dark appearance. **Apply theme** generates readable tonal colors,
+saves the choice for future plans, and renders the existing deck. Custom HTML slides keep their design.
+Choose **AI / genre match**, add an optional theme brief, then **Let AI choose theme**. Select an installed
+planner in Generation settings first. The agent uses app category, description, audience, tone, screenshots
+and brief; only the theme changes on an existing plan. Quick plan remains a deterministic category fallback.
+
+Saved `app.json` settings use `themeSelection`:
+
+```json
+{"themeSelection":{"mode":"material","primary":"#006B5E","secondary":"#795548","tertiary":"#A43F68","appearance":"dark","brief":"Calm finance app"}}
+```
+
+Other modes: `{"mode":"preset","preset":"material-teal-light"}` or `{"mode":"auto","brief":"Premium editorial finance app"}`.
+`POST /api/themes/resolve` accepts a preset or Material selection and returns a plan theme without saving.
+Primary is required for Material; secondary and tertiary are optional. Colors must be six-digit hex values;
+appearance must be `light` or `dark`. Invalid selections return 422 and are rejected before saving through
+`POST /api/projects` or `PUT /api/projects/:name/app`. `POST /api/projects/:name/run` accepts
+`{"steps":["theme","build"],"planner":"claude"}` for theme-only selection. A failed planner follows the
+existing retry-and-category-fallback behavior, recorded in the activity log.
 
 **Calm presets (category defaults):** `sage-mist` · `sand-dune` · `harbor-night` · `dusk-rose` · `fog-lilac` ·
 `ocean-calm` · `clay-wellness`.

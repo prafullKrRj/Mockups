@@ -120,7 +120,7 @@ export function validateThemeSelection(selection) {
   if (selection.mode === 'preset' && !Object.hasOwn(PRESETS, selection.preset)) fail('unknown preset');
   if (selection.mode === 'material') {
     for (const key of ['primary', 'secondary', 'tertiary']) {
-      if ((key === 'primary' || selection[key] !== undefined) && !/^#[0-9a-f]{6}$/i.test(selection[key])) fail(`${key} must be a six-digit hex color`);
+      if ((key === 'primary' || selection[key] !== undefined) && (typeof selection[key] !== 'string' || selection[key].length !== 7 || !/^#[0-9a-f]{6}$/i.test(selection[key]))) fail(`${key} must be a six-digit hex color`);
     }
     if (!['light', 'dark'].includes(selection.appearance)) fail('appearance must be light or dark');
   }

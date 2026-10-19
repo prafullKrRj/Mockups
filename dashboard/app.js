@@ -5,7 +5,7 @@ const h = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<':
 const LAYOUTS = ['hero', 'device-bottom', 'device-top', 'tilted', 'two-devices', 'callouts', 'zoom', 'closer'];
 const FG_LAYOUTS = ['fg-split', 'fg-centered', 'fg-fan'];
 const ROLES = ['hero', 'differentiator', 'feature', 'proof', 'closer'];
-const DECOR = ['blobs', 'grid', 'dots', 'glow', 'rings', 'noise'];
+const DECOR = ['blobs', 'grid', 'dots', 'glow', 'rings', 'noise', 'none'];
 const CATEGORIES = ['finance', 'productivity', 'health', 'fitness', 'ai', 'social', 'food', 'travel', 'education', 'utilities', 'business', 'lifestyle', 'games', 'kids', 'music', 'weather', 'medical', 'general'];
 const COLOR_KEYS = ['bg', 'bg2', 'text', 'muted', 'accent', 'accent2', 'surface', 'surfaceText'];
 
@@ -161,6 +161,70 @@ function renderInputs(app = state.project.app) {
   $('#icon-preview').hidden = !hasIcon;
   if (hasIcon) $('#icon-preview').src = `/files/${encodeURIComponent(state.name)}/input/icon.png?t=${state.bust}`;
   renderCounters($('#app-form'));
+  renderThemeSelection(app.themeSelection);
+}
+
+function renderThemeSelection(selection = { mode: 'auto' }) {
+  $('#theme-selection').innerHTML = `
+    <label>Theme choice<select name="themeMode"><option value="auto">AI / genre match</option><option value="preset">Choose a preset</option><option value="material">Custom Material colors</option></select></label>
+    <label data-theme-mode="preset">Preset ${sel('themePreset', state.meta.presets, selection.preset ?? state.plan?.theme.preset ?? 'fog-lilac')}</label>
+    <label data-theme-mode="material">Appearance ${sel('appearance', ['light', 'dark'], selection.appearance ?? 'light')}</label>
+    ${[['primary', 'Primary', '#6750A4'], ['secondary', 'Secondary', '#625B71'], ['tertiary', 'Tertiary', '#7D5260']].map(([key, label, fallback]) => `<label data-theme-mode="material">${label}<input type="color" name="${key}" value="${h(selection[key] ?? fallback)}"></label>`).join('')}
+    <label class="wide">Theme brief <textarea name="themeBrief" maxlength="2000" placeholder="e.g. Calm finance app, sage greens, warm surfaces, premium feel">${h(selection.brief ?? '')}</textarea></label>`;
+  $('[name="themeMode"]').value = selection.mode;
+  updateThemeChoice();
+}
+
+function collectThemeSelection() {
+  const f = new FormData($('#theme-selection'));
+  const mode = f.get('themeMode');
+  return { mode, brief: String(f.get('themeBrief') ?? ''),
+    ...(mode === 'preset' ? { preset: f.get('themePreset') } : {}),
+    ...(mode === 'material' ? Object.fromEntries(['primary', 'secondary', 'tertiary', 'appearance'].map((key) => [key, f.get(key)])) : {}),
+  };
+}
+
+function updateThemeChoice() {
+  const mode = $('[name="themeMode"]').value;
+  $$('[data-theme-mode]').forEach((el) => { el.hidden = el.dataset.themeMode !== mode; });
+  $('#apply-theme').hidden = mode === 'auto';
+  $('#ai-theme').hidden = mode !== 'auto';
+  $('#theme-help').textContent = mode === 'auto'
+    ? 'AI uses your app genre, brief and screenshots. Choose an installed planner in Generation settings.'
+    : 'Saved choice is used for future plans. Existing custom HTML slides keep their design.';
+  $('#theme-preview').replaceChildren();
+}
+
+async function applyThemeChoice(selection = collectThemeSelection(), saveInfo = true) {
+  if (state.themeBusy || state.job || state.starting) return;
+  state.themeBusy = true;
+  updateJobControls();
+  const name = state.name;
+  try {
+    const plan = state.plan ? collectPlan() : null;
+    const theme = await api('/api/themes/resolve', { method: 'POST', body: selection });
+    if (name !== state.name) return;
+    renderThemeSelection(selection);
+    if (saveInfo) await saveApp(true);
+    else {
+      const project = await api(`/api/projects/${encodeURIComponent(name)}/app`, { method: 'PUT', body: { ...state.project.app, themeSelection: selection } });
+      if (name !== state.name) return;
+      setProject(project);
+    }
+    if (name !== state.name) return;
+    if (plan) {
+      state.plan = { ...plan, theme };
+      markDirty('plan');
+      renderPlan();
+      await savePlan();
+    } else {
+      renderGallery(theme.preset);
+      toast('Theme saved — add screenshots and create a plan');
+    }
+    const colors = { ...state.meta.presetData[theme.preset].colors, ...theme.colors };
+    $('#theme-preview').innerHTML = `<div class="theme-sample" style="--sample-bg:${colors.bg};--sample-bg2:${colors.bg2};--sample-text:${colors.text};--sample-accent:${colors.accent};--sample-accent2:${colors.accent2};--sample-surface:${colors.surface};--sample-surface-text:${colors.surfaceText}"><small>${h(state.project.app.name)}</small><strong>Your next great idea.</strong><span>Readable type. Colors that belong together.</span><b>Aa <i>Material palette</i></b></div>`;
+  } catch (e) { toast(e.message, true); }
+  finally { state.themeBusy = false; updateJobControls(); }
 }
 
 function renderCounters(root) {
@@ -178,6 +242,7 @@ function collectApp() {
   const f = new FormData($('#app-form'));
   const lines = (k) => String(f.get(k) ?? '').split('\n').map((s) => s.trim()).filter(Boolean);
   const app = { ...state.project.app };
+  app.themeSelection = collectThemeSelection();
   for (const k of ['name', 'packageName', 'category', 'shortDescription', 'fullDescription', 'audience', 'tone', 'notes']) app[k] = String(f.get(k) ?? '');
   const selected = csv(String(f.get('locales') ?? ''));
   if (app.locales || selected.length !== 1 || selected[0] !== app.locale) app.locales = selected;
@@ -235,9 +300,9 @@ function renderPlan() {
     v.errors.length ? `<div class="validation err"><b>Errors</b><ul>${v.errors.map((e) => `<li>${h(e)}</li>`).join('')}</ul></div>` : '',
     v.warnings.length ? `<div class="validation warn"><b>Warnings</b><ul>${v.warnings.map((e) => `<li>${h(e)}</li>`).join('')}</ul></div>` : '',
   ].join('') : '';
-  $('#theme-gallery').hidden = !plan;
+  $('#theme-gallery').hidden = false;
+  renderGallery(plan?.theme.preset ?? collectThemeSelection().preset);
   if (!plan) return;
-  renderGallery(plan.theme.preset);
   $('#plan-json').value = JSON.stringify(plan, null, 2);
   const t = plan.theme;
   const preset = state.meta.presets;
@@ -245,7 +310,7 @@ function renderPlan() {
   $('#theme-form').innerHTML = `
     <label class="wide">Preset ${sel('preset', preset, t.preset)}</label>
     ${COLOR_KEYS.map((k) => `<label>${k}<div class="row"><input type="color" data-color="${k}" value="${t.colors?.[k] ?? state.meta.presetData[t.preset]?.colors[k] ?? '#000000'}"><label class="row" style="flex-direction:row;font-size:11px"><input type="checkbox" data-override="${k}" ${t.colors?.[k] ? 'checked' : ''}> override</label></div></label>`).join('')}
-    <label>Background ${sel('bgType', ['', 'linear', 'radial', 'mesh', 'solid'], t.background?.type ?? '')}</label>
+    <label>Background ${sel('bgType', ['', 'linear', 'radial', 'mesh', 'solid', 'soft'], t.background?.type ?? '')}</label>
     <label>Angle<input name="bgAngle" type="number" min="0" max="360" value="${t.background?.angle ?? ''}" placeholder="preset"></label>
     <label>Headline font<input name="fHead" value="${h(t.fonts?.headline ?? '')}" placeholder="preset"></label>
     <label>Body font<input name="fBody" value="${h(t.fonts?.body ?? '')}" placeholder="preset"></label>
@@ -458,7 +523,9 @@ function updateJobControls() {
   if (!state.project) return;
   $('#toggle-json').disabled = !state.plan;
   $('#save-plan').disabled = !state.plan || !!state.saving;
-  const busy = !!state.job || state.starting;
+  const busy = !!state.job || state.starting || state.themeBusy;
+  $('#apply-theme').disabled = busy;
+  $('#ai-theme').disabled = busy || !state.project.screenshots.length;
   for (const id of ['run-all', 'plan-agent', 'plan-heuristic', 'export-now', 'export-btn']) {
     const missing = id.startsWith('export') ? !state.project.deck?.some((e) => e.locale === state.locale) : !state.project.screenshots.length;
     $(`#${id}`).disabled = busy || missing;
@@ -505,7 +572,7 @@ async function run(body, title) {
   state.starting = true;
   updateJobControls();
   try {
-    if (state.tab === 'inputs') await saveApp(true);
+    if (state.tab === 'inputs' || state.appDirty) await saveApp(true);
     if (name !== state.name) return;
     const { id } = await api(`/api/projects/${encodeURIComponent(name)}/run`, { method: 'POST', body });
     attachJob(id, title, name);
@@ -625,7 +692,7 @@ async function init() {
   }, `Generate · ${$('#planner').value} → ${$('#builder').value}`));
   $('#plan-agent').addEventListener('click', () => run({ steps: ['plan', 'build'], planner: $('#planner').value, builder: 'template', model: $('#model').value }, `Plan · ${$('#planner').value}`));
   $('#plan-heuristic').addEventListener('click', async () => {
-    try { setProject(await api(`/api/projects/${encodeURIComponent(state.name)}/plan/heuristic`, { method: 'POST' })); toast('Quick plan created'); } catch (e) { toast(e.message, true); }
+    try { if (state.appDirty) await saveApp(true); setProject(await api(`/api/projects/${encodeURIComponent(state.name)}/plan/heuristic`, { method: 'POST' })); toast('Quick plan created'); } catch (e) { toast(e.message, true); }
   });
   $('#toggle-json').addEventListener('click', async () => {
     const json = $('#plan-json');
@@ -641,14 +708,28 @@ async function init() {
   $('#save-plan').addEventListener('click', savePlan);
   // Picking a preset drops token overrides so the preset shows as designed; copy and layouts are kept.
   $('#theme-gallery').addEventListener('click', (e) => {
-    if (e.target.hasAttribute('data-all-themes')) { state.allThemes = !state.allThemes; renderGallery(state.plan.theme.preset); return; }
+    if (e.target.hasAttribute('data-all-themes')) { state.allThemes = !state.allThemes; renderGallery(state.plan?.theme.preset); return; }
     const b = e.target.closest('.swatch');
     if (!b) return;
-    state.plan = collectPlan();
-    state.plan.theme = { preset: b.dataset.preset, ...(state.plan.theme.referenceNotes ? { referenceNotes: state.plan.theme.referenceNotes } : {}) };
-    markDirty('plan');
-    renderPlan();
-    savePlan();
+    applyThemeChoice({ mode: 'preset', preset: b.dataset.preset, brief: collectThemeSelection().brief }, false);
+  });
+  $('#theme-selection').addEventListener('submit', (e) => e.preventDefault());
+  $('#theme-selection').addEventListener('input', () => markDirty('app'));
+  $('#theme-selection').addEventListener('change', updateThemeChoice);
+  $('#apply-theme').addEventListener('click', () => applyThemeChoice());
+  $('#ai-theme').addEventListener('click', async () => {
+    try {
+      const planner = $('#planner').value;
+      if (planner === 'heuristic' || !state.meta.agents.some((agent) => agent.id === planner && agent.path)) {
+        toast('Choose an installed AI planner in Generation settings first', true);
+        $('.generation-settings').open = true;
+        $('#planner').focus();
+        return;
+      }
+      if (state.planDirty && !await savePlan()) return;
+      await saveApp(true);
+      await run({ steps: ['theme', 'build'], planner, builder: 'template', model: $('#model').value }, `Theme · ${planner}`);
+    } catch (e) { toast(e.message, true); }
   });
   window.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 's') {

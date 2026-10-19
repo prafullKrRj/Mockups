@@ -101,41 +101,46 @@ export async function runPipeline(name, options = {}) {
 
   if (steps.includes('plan') || steps.includes('theme')) {
     const previousPlan = project.plan;
-    stage(`plan (${planner})`);
-    const palette = await referencePalette(project);
-    if (palette.length) await writeJson(path.join(paths.runs, 'reference-palette.json'), palette);
-    let plan = null;
-    if (planner !== 'heuristic') {
-      if (project.plan) await writeJson(path.join(paths.runs, 'plan.previous.json'), project.plan);
-      let previousErrors = null;
-      for (let attempt = 1; attempt <= 3 && !plan; attempt++) {
-        signal?.throwIfAborted();
-        await fs.rm(paths.plan, { force: true });
-        const images = [...project.screenshots.map((s) => `input/screenshots/${s.file}`), ...project.references.map((r) => `input/reference/${r.file}`)];
-        const { code } = await runAgent({ agentId: planner, prompt: await plannerPrompt(project, { palette, previousErrors }), project: paths.dir, root: ROOT, images, model, log, signal });
-        const candidate = await readJson(paths.plan, null).catch((e) => { previousErrors = [e.message]; return null; });
-        if (!candidate) {
-          previousErrors ??= [`plan.json was not written (agent exit code ${code})`];
-          log(`attempt ${attempt}: ${previousErrors[0]}`, 'warn');
-          continue;
+    try {
+      stage(`plan (${planner})`);
+      const palette = await referencePalette(project);
+      if (palette.length) await writeJson(path.join(paths.runs, 'reference-palette.json'), palette);
+      let plan = null;
+      if (planner !== 'heuristic') {
+        if (project.plan) await writeJson(path.join(paths.runs, 'plan.previous.json'), project.plan);
+        let previousErrors = null;
+        for (let attempt = 1; attempt <= 3 && !plan; attempt++) {
+          signal?.throwIfAborted();
+          await fs.rm(paths.plan, { force: true });
+          const images = [...project.screenshots.map((s) => `input/screenshots/${s.file}`), ...project.references.map((r) => `input/reference/${r.file}`)];
+          const { code } = await runAgent({ agentId: planner, prompt: await plannerPrompt(project, { palette, previousErrors }), project: paths.dir, root: ROOT, images, model, log, signal });
+          const candidate = await readJson(paths.plan, null).catch((e) => { previousErrors = [e.message]; return null; });
+          if (!candidate) {
+            previousErrors ??= [`plan.json was not written (agent exit code ${code})`];
+            log(`attempt ${attempt}: ${previousErrors[0]}`, 'warn');
+            continue;
+          }
+          if (typeof candidate === 'object' && !Array.isArray(candidate)) candidate.theme = selectedTheme(project.app, candidate.theme);
+          const v = validatePlan(candidate, project);
+          if (v.ok) {
+            plan = { ...candidate, generatedBy: planner };
+            v.warnings.forEach((w) => log(`plan warning: ${w}`, 'warn'));
+          } else {
+            previousErrors = v.errors;
+            log(`attempt ${attempt}: plan rejected (${v.errors.length} errors)\n  - ${v.errors.join('\n  - ')}`, 'warn');
+          }
         }
-        candidate.theme = selectedTheme(project.app, candidate.theme);
-        const v = validatePlan(candidate, project);
-        if (v.ok) {
-          plan = { ...candidate, generatedBy: planner };
-          v.warnings.forEach((w) => log(`plan warning: ${w}`, 'warn'));
-        } else {
-          previousErrors = v.errors;
-          log(`attempt ${attempt}: plan rejected (${v.errors.length} errors)\n  - ${v.errors.join('\n  - ')}`, 'warn');
-        }
+        if (!plan) log('planner agent failed guardrails 3 times — falling back to heuristic plan', 'error');
       }
-      if (!plan) log('planner agent failed guardrails 3 times — falling back to heuristic plan', 'error');
+      plan ??= heuristicPlan(project);
+      if (steps.includes('theme') && previousPlan) plan = { ...previousPlan, theme: plan.theme };
+      await writeJson(paths.plan, plan);
+      log(`plan: ${plan.slides.length} slides, theme ${plan.theme.preset}, by ${plan.generatedBy}`);
+      project = await loadProject(name);
+    } catch (error) {
+      if (previousPlan) await writeJson(paths.plan, previousPlan);
+      throw error;
     }
-    plan ??= heuristicPlan(project);
-    if (steps.includes('theme') && previousPlan) plan = { ...previousPlan, theme: plan.theme };
-    await writeJson(paths.plan, plan);
-    log(`plan: ${plan.slides.length} slides, theme ${plan.theme.preset}, by ${plan.generatedBy}`);
-    project = await loadProject(name);
   }
 
   if (steps.includes('translate') && translator) {
@@ -173,7 +178,7 @@ export async function runPipeline(name, options = {}) {
 
       // Guardrail 1: the plan must still validate, else roll it back.
       project = await loadProject(name).catch(async (e) => { log(`builder broke plan.json (${e.message}) — rolled back`, 'error'); await writeJson(paths.plan, planBefore); return loadProject(name); });
-      if (project.plan) {
+      if (project.plan && typeof project.plan === 'object' && !Array.isArray(project.plan)) {
         project.plan.theme = selectedTheme(project.app, project.plan.theme);
         await writeJson(paths.plan, project.plan);
       }

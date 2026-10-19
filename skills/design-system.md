@@ -45,6 +45,11 @@ fanned phones right).
 
 ## Presets
 
+Material palettes: `material-{violet,indigo,blue,cyan,teal,emerald,lime,amber,coral,rose,plum,slate}-{light,dark}`.
+These 24 presets use Google's Material tonal palettes. The planner prompt includes all preset tokens.
+Custom Material selections generate the same roles from primary, secondary and tertiary colors; use the exact
+theme supplied in the prompt when the user locks a preset or custom palette.
+
 Soothing (preferred defaults): `sage-mist`, `sand-dune`, `harbor-night` (dark), `dusk-rose`, `fog-lilac`, `ocean-calm`,
 `clay-wellness`. Expressive: `aurora-light`, `midnight-glow`, `bold-gradient`, `swiss-paper`, `neon-night`,
 `editorial-serif`, `candy-pop`, `mono-minimal`. Pick by category, then read `visual-craft.md` before committing:

@@ -1,1 +1,134 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","title":"Mockup Studio plan","type":"object","required":["version","app","theme","slides","featureGraphic"],"additionalProperties":false,"definitions":{"hex":{"type":"string","pattern":"^#[0-9a-fA-F]{6}$"},"text":{"type":"string","maxLength":120},"focus":{"type":"object","required":["x","y","w","h"],"additionalProperties":false,"properties":{"x":{"type":"number","minimum":0,"maximum":1},"y":{"type":"number","minimum":0,"maximum":1},"w":{"type":"number","exclusiveMinimum":0,"maximum":1},"h":{"type":"number","exclusiveMinimum":0,"maximum":1}}}},"properties":{"version":{"const":1},"generatedBy":{"type":"string"},"app":{"type":"object","required":["name"],"additionalProperties":false,"properties":{"name":{"type":"string","minLength":1,"maxLength":50},"tagline":{"$ref":"#/definitions/text"},"icon":{"type":"string"}}},"theme":{"type":"object","required":["preset"],"additionalProperties":false,"properties":{"preset":{"enum":["aurora-light","midnight-glow","bold-gradient","swiss-paper","clay-wellness","neon-night","editorial-serif","candy-pop","ocean-calm","mono-minimal","sage-mist","sand-dune","harbor-night","dusk-rose","fog-lilac","material-violet-light","material-violet-dark","material-indigo-light","material-indigo-dark","material-blue-light","material-blue-dark","material-cyan-light","material-cyan-dark","material-teal-light","material-teal-dark","material-emerald-light","material-emerald-dark","material-lime-light","material-lime-dark","material-amber-light","material-amber-dark","material-coral-light","material-coral-dark","material-rose-light","material-rose-dark","material-plum-light","material-plum-dark","material-slate-light","material-slate-dark"]},"colors":{"type":"object","additionalProperties":false,"properties":{"bg":{"$ref":"#/definitions/hex"},"bg2":{"$ref":"#/definitions/hex"},"text":{"$ref":"#/definitions/hex"},"muted":{"$ref":"#/definitions/hex"},"accent":{"$ref":"#/definitions/hex"},"accent2":{"$ref":"#/definitions/hex"},"surface":{"$ref":"#/definitions/hex"},"surfaceText":{"$ref":"#/definitions/hex"}}},"background":{"type":"object","additionalProperties":false,"properties":{"type":{"enum":["linear","radial","mesh","solid","soft"]},"angle":{"type":"number","minimum":0,"maximum":360}}},"fonts":{"type":"object","additionalProperties":false,"properties":{"headline":{"type":"string","maxLength":60},"body":{"type":"string","maxLength":60},"headlineWeight":{"type":"integer","minimum":300,"maximum":900}}},"headlineCase":{"enum":["none","upper"]},"eyebrowStyle":{"enum":["quiet","caps"]},"highlightStyle":{"enum":["color","gradient","marker","underline","none"]},"decor":{"type":"array","items":{"enum":["blobs","grid","dots","glow","rings","noise","none"]},"maxItems":4},"device":{"type":"object","additionalProperties":false,"properties":{"frame":{"enum":["dark","light","titanium","none"]},"shadow":{"enum":["soft","hard","none"]}}},"referenceNotes":{"type":"string","maxLength":2000}}},"slides":{"type":"array","minItems":2,"maxItems":8,"items":{"type":"object","required":["id","layout","screenshots","headline"],"additionalProperties":false,"properties":{"id":{"type":"string","pattern":"^[a-z0-9-]{1,40}$"},"role":{"enum":["hero","differentiator","feature","proof","closer"]},"layout":{"enum":["hero","device-bottom","device-top","tilted","two-devices","callouts","zoom","closer"]},"screenshots":{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":2},"eyebrow":{"oneOf":[{"type":"string","maxLength":30},{"type":"object","minProperties":1,"propertyNames":{"pattern":"^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"},"additionalProperties":{"type":"string","maxLength":30}}]},"headline":{"oneOf":[{"type":"string","minLength":1,"maxLength":44},{"type":"object","minProperties":1,"propertyNames":{"pattern":"^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"},"additionalProperties":{"type":"string","minLength":1,"maxLength":44}}]},"highlight":{"oneOf":[{"type":"string","maxLength":44},{"type":"object","minProperties":1,"propertyNames":{"pattern":"^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"},"additionalProperties":{"type":"string","maxLength":44}}]},"subline":{"oneOf":[{"type":"string","maxLength":90},{"type":"object","minProperties":1,"propertyNames":{"pattern":"^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"},"additionalProperties":{"type":"string","maxLength":90}}]},"callouts":{"type":"array","items":{"oneOf":[{"type":"string","maxLength":32},{"type":"object","minProperties":1,"propertyNames":{"pattern":"^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"},"additionalProperties":{"type":"string","maxLength":32}}]},"maxItems":3},"badges":{"type":"array","items":{"oneOf":[{"type":"string","maxLength":24},{"type":"object","minProperties":1,"propertyNames":{"pattern":"^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"},"additionalProperties":{"type":"string","maxLength":24}}]},"maxItems":3},"focus":{"$ref":"#/definitions/focus"},"background":{"enum":["default","alt","accent"]},"mode":{"oneOf":[{"enum":["template","custom"]},{"type":"object","minProperties":1,"propertyNames":{"pattern":"^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"},"additionalProperties":{"enum":["template","custom"]}}]},"notes":{"type":"string","maxLength":1000}}}},"featureGraphic":{"type":"object","required":["layout","headline","screenshots"],"additionalProperties":false,"properties":{"layout":{"enum":["fg-split","fg-centered","fg-fan"]},"headline":{"oneOf":[{"type":"string","maxLength":44},{"type":"object","minProperties":1,"propertyNames":{"pattern":"^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"},"additionalProperties":{"type":"string","maxLength":44}}]},"highlight":{"oneOf":[{"type":"string","maxLength":44},{"type":"object","minProperties":1,"propertyNames":{"pattern":"^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"},"additionalProperties":{"type":"string","maxLength":44}}]},"badges":{"type":"array","items":{"oneOf":[{"type":"string","maxLength":24},{"type":"object","minProperties":1,"propertyNames":{"pattern":"^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"},"additionalProperties":{"type":"string","maxLength":24}}]},"maxItems":3},"screenshots":{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":3},"mode":{"oneOf":[{"enum":["template","custom"]},{"type":"object","minProperties":1,"propertyNames":{"pattern":"^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"},"additionalProperties":{"enum":["template","custom"]}}]},"notes":{"type":"string","maxLength":1000}}}}}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Mockup Studio plan",
+  "type": "object",
+  "required": ["version", "app", "theme", "slides", "featureGraphic"],
+  "additionalProperties": false,
+  "definitions": {
+    "hex": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "text": { "type": "string", "maxLength": 120 },
+    "focus": {
+      "type": "object",
+      "required": ["x", "y", "w", "h"],
+      "additionalProperties": false,
+      "properties": {
+        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+        "y": { "type": "number", "minimum": 0, "maximum": 1 },
+        "w": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "h": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
+      }
+    }
+  },
+  "properties": {
+    "version": { "const": 1 },
+    "generatedBy": { "type": "string" },
+    "app": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 50 },
+        "tagline": { "$ref": "#/definitions/text" },
+        "icon": { "type": "string" }
+      }
+    },
+    "theme": {
+      "type": "object",
+      "required": ["preset"],
+      "additionalProperties": false,
+      "properties": {
+        "preset": {
+          "enum": ["aurora-light", "midnight-glow", "bold-gradient", "swiss-paper", "clay-wellness", "neon-night", "editorial-serif", "candy-pop", "ocean-calm", "mono-minimal", "sage-mist", "sand-dune", "harbor-night", "dusk-rose", "fog-lilac", "material-violet-light", "material-violet-dark", "material-indigo-light", "material-indigo-dark", "material-blue-light", "material-blue-dark", "material-cyan-light", "material-cyan-dark", "material-teal-light", "material-teal-dark", "material-emerald-light", "material-emerald-dark", "material-lime-light", "material-lime-dark", "material-amber-light", "material-amber-dark", "material-coral-light", "material-coral-dark", "material-rose-light", "material-rose-dark", "material-plum-light", "material-plum-dark", "material-slate-light", "material-slate-dark"]
+        },
+        "colors": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "bg": { "$ref": "#/definitions/hex" },
+            "bg2": { "$ref": "#/definitions/hex" },
+            "text": { "$ref": "#/definitions/hex" },
+            "muted": { "$ref": "#/definitions/hex" },
+            "accent": { "$ref": "#/definitions/hex" },
+            "accent2": { "$ref": "#/definitions/hex" },
+            "surface": { "$ref": "#/definitions/hex" },
+            "surfaceText": { "$ref": "#/definitions/hex" }
+          }
+        },
+        "background": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": { "enum": ["linear", "radial", "mesh", "solid", "soft"] },
+            "angle": { "type": "number", "minimum": 0, "maximum": 360 }
+          }
+        },
+        "fonts": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "headline": { "type": "string", "maxLength": 60 },
+            "body": { "type": "string", "maxLength": 60 },
+            "headlineWeight": { "type": "integer", "minimum": 300, "maximum": 900 }
+          }
+        },
+        "headlineCase": { "enum": ["none", "upper"] },
+        "eyebrowStyle": { "enum": ["quiet", "caps"] },
+        "highlightStyle": { "enum": ["color", "gradient", "marker", "underline", "none"] },
+        "decor": {
+          "type": "array",
+          "items": { "enum": ["blobs", "grid", "dots", "glow", "rings", "noise", "none"] },
+          "maxItems": 4
+        },
+        "device": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "frame": { "enum": ["dark", "light", "titanium", "none"] },
+            "shadow": { "enum": ["soft", "hard", "none"] }
+          }
+        },
+        "referenceNotes": { "type": "string", "maxLength": 2000 }
+      }
+    },
+    "slides": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "required": ["id", "layout", "screenshots", "headline"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]{1,40}$" },
+          "role": { "enum": ["hero", "differentiator", "feature", "proof", "closer"] },
+          "layout": { "enum": ["hero", "device-bottom", "device-top", "tilted", "two-devices", "callouts", "zoom", "closer"] },
+          "screenshots": { "type": "array", "items": { "type": "string" }, "minItems": 1, "maxItems": 2 },
+          "eyebrow": {"oneOf": [{"type": "string", "maxLength": 30}, {"type": "object", "minProperties": 1, "propertyNames": {"pattern": "^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"}, "additionalProperties": {"type": "string", "maxLength": 30}}]},
+          "headline": {"oneOf": [{"type": "string", "minLength": 1, "maxLength": 44}, {"type": "object", "minProperties": 1, "propertyNames": {"pattern": "^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"}, "additionalProperties": {"type": "string", "minLength": 1, "maxLength": 44}}]},
+          "highlight": {"oneOf": [{"type": "string", "maxLength": 44}, {"type": "object", "minProperties": 1, "propertyNames": {"pattern": "^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"}, "additionalProperties": {"type": "string", "maxLength": 44}}]},
+          "subline": {"oneOf": [{"type": "string", "maxLength": 90}, {"type": "object", "minProperties": 1, "propertyNames": {"pattern": "^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"}, "additionalProperties": {"type": "string", "maxLength": 90}}]},
+          "callouts": {"type": "array", "items": {"oneOf": [{"type": "string", "maxLength": 32}, {"type": "object", "minProperties": 1, "propertyNames": {"pattern": "^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"}, "additionalProperties": {"type": "string", "maxLength": 32}}]}, "maxItems": 3},
+          "badges": {"type": "array", "items": {"oneOf": [{"type": "string", "maxLength": 24}, {"type": "object", "minProperties": 1, "propertyNames": {"pattern": "^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"}, "additionalProperties": {"type": "string", "maxLength": 24}}]}, "maxItems": 3},
+          "focus": { "$ref": "#/definitions/focus" },
+          "background": { "enum": ["default", "alt", "accent"] },
+          "mode": { "oneOf": [{ "enum": ["template", "custom"] }, { "type": "object", "minProperties": 1, "propertyNames": { "pattern": "^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$" }, "additionalProperties": { "enum": ["template", "custom"] } }] },
+          "notes": { "type": "string", "maxLength": 1000 }
+        }
+      }
+    },
+    "featureGraphic": {
+      "type": "object",
+      "required": ["layout", "headline", "screenshots"],
+      "additionalProperties": false,
+      "properties": {
+        "layout": { "enum": ["fg-split", "fg-centered", "fg-fan"] },
+        "headline": {"oneOf": [{"type": "string", "maxLength": 44}, {"type": "object", "minProperties": 1, "propertyNames": {"pattern": "^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"}, "additionalProperties": {"type": "string", "maxLength": 44}}]},
+        "highlight": {"oneOf": [{"type": "string", "maxLength": 44}, {"type": "object", "minProperties": 1, "propertyNames": {"pattern": "^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"}, "additionalProperties": {"type": "string", "maxLength": 44}}]},
+        "badges": {"type": "array", "items": {"oneOf": [{"type": "string", "maxLength": 24}, {"type": "object", "minProperties": 1, "propertyNames": {"pattern": "^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$"}, "additionalProperties": {"type": "string", "maxLength": 24}}]}, "maxItems": 3},
+        "screenshots": { "type": "array", "items": { "type": "string" }, "minItems": 1, "maxItems": 3 },
+        "mode": { "oneOf": [{ "enum": ["template", "custom"] }, { "type": "object", "minProperties": 1, "propertyNames": { "pattern": "^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$" }, "additionalProperties": { "enum": ["template", "custom"] } }] },
+        "notes": { "type": "string", "maxLength": 1000 }
+      }
+    }
+  }
+}

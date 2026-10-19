@@ -11,8 +11,10 @@ exist — `theme-replication.md`.
 1. Read `app.json`. It describes the app, its audience, and what every screenshot represents (`screens`).
 2. **Look at every screenshot image.** Confirm what is on it; note the UI's own colours (the theme should complement,
    not clash with, the app UI). Do not trust filenames alone.
-3. If there are reference images, look at each and extract the theme (see `theme-replication.md`). Otherwise choose a
-   preset by category from `design-system.md`, adjusted to `brandColors` if given.
+3. Respect `app.json.themeSelection`: `preset` and `material` lock the theme supplied in the prompt. For `auto`
+   (or no selection), choose from the full preset catalog using genre, description, audience, tone, screenshots,
+   and `themeSelection.brief`. Reference images guide automatic selection (see `theme-replication.md`). Adjust
+   automatic choices to `brandColors` if given. Explain the choice in `theme.referenceNotes`.
 4. Decide the deck narrative (hero → differentiator → features → proof → closer). 5–7 slides is the sweet spot;
    follow `app.json.slideCount` if present.
 5. Assign the best screenshot to each slide. Higher `priority` screens go earlier.

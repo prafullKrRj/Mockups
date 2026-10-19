@@ -99,6 +99,16 @@
         <span id="plan-status" class="muted"></span>
       </div>
       <div id="plan-validation"></div>
+      <div class="panel theme-studio">
+        <h2>Choose your theme <span class="hint">Pick a look, build a Material palette, or let an agent decide.</span></h2>
+        <form id="theme-selection" class="form"></form>
+        <div id="theme-preview" class="theme-preview" aria-live="polite"></div>
+        <div class="plan-actions">
+          <button class="btn primary" id="apply-theme">Apply theme</button>
+          <button class="btn" id="ai-theme">Let AI choose theme</button>
+          <span id="theme-help" class="muted"></span>
+        </div>
+      </div>
       <div id="theme-gallery" class="theme-gallery" hidden></div>
       <div id="plan-empty" class="panel muted">No plan yet. Run <b>Generate</b>, or make a quick plan.</div>
       <div id="plan-editor" class="cols" hidden>
