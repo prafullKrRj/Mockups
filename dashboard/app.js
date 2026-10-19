@@ -308,6 +308,9 @@ function previewCard(e, scale) {
 
 function renderPreviews() {
   const deck = state.project.deck ?? [];
+  const refs = state.project.references;
+  $('#ref-strip').hidden = !refs.length;
+  $('#ref-strip').innerHTML = refs.length ? `<span class="muted">Reference</span>${refs.map((r) => `<img src="${files('input/reference', r.file)}" alt="">`).join('')}` : '';
   $('#previews').innerHTML = deck.length ? deck.map((e) => previewCard(e, e.kind === 'feature' ? 0.5 : 0.25)).join('') : '<div class="panel muted">Nothing rendered yet.</div>';
 }
 
