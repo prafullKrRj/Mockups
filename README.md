@@ -86,7 +86,7 @@ node src/cli.js new myapp
 
 1. **Screenshots** → `projects/myapp/input/screenshots/`. Use raw captures (PNG/JPG). Name them in rough story order
    (`01-home.png`, …).
-2. **App info** → `projects/myapp/app.json`. See [`samples/subtrack/app.json`](samples/subtrack/app.json). The most
+2. **App info** → `projects/myapp/app.json`. See [`samples/subtrack-claude/app.json`](samples/subtrack-claude/app.json). The most
    important part is `screens`: for each file, say what it shows (`title`, `description`) and give it a `priority`
    (higher means earlier in the deck).
 3. *Optional:* put a **sample listing whose look you want** in `input/reference/` (one or more images), and your
