@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "generatedBy": "claude",
+  "app": {
+    "name": "SubTrack",
+    "tagline": "Never pay for a forgotten renewal"
+  },
+  "theme": {
+    "preset": "bold-gradient",
+    "colors": {
+      "bg": "#B9B0FF",
+      "bg2": "#FFB08A",
+      "text": "#14112E",
+      "muted": "#3A2F6B",
+      "accent": "#5B4FE0",
+      "accent2": "#FF8FA3",
+      "surface": "#FFFFFF",
+      "surfaceText": "#14112E"
+    },
+    "background": {
+      "type": "linear",
+      "angle": 180
+    },
+    "fonts": {
+      "headline": "Oswald",
+      "body": "DM Sans",
+      "headlineWeight": 700
+    },
+    "headlineCase": "upper",
+    "highlightStyle": "marker",
+    "decor": [
+      "dots",
+      "glow"
+    ],
+    "device": {
+      "frame": "light",
+      "shadow": "soft"
+    },
+    "referenceNotes": "Reference: 6-slide deck on a vertical warm gradient (pink #FC8999/#FE87A5 at top fading to peach-orange #FDAA78 at bottom) with a faint dot texture. Headlines are heavy condensed uppercase grotesk (Anton/Bebas-like -> Oswald 700), very dark navy text (#0D1419), with a light marker block behind the key words. Small uppercase eyebrow with a leading dot, regular-weight sans subline (DM Sans). Text top and centred on slide 1/6, left-aligned on feature slides, bottom-aligned on slide 3. Devices: white/light frame, soft shadow, large and bleeding off the bottom; slide 2 tilted, slide 3 bleeds off the top, slide 5 two overlapping phones, closer has app icon + pill badges + smaller phone. Mapping: kept the vertical light gradient, dark text, condensed uppercase type, marker highlight, dots texture and layout rhythm; swapped the pink top for brand lavender #B9B0FF (matches the app's violet UI) and kept a warm peach bottom #FFB08A so the family resemblance stays; accent = brand #5B4FE0. Text #14112E reaches ~9:1 on both stops."
+  },
+  "slides": [
+    {
+      "id": "hero",
+      "role": "hero",
+      "layout": "hero",
+      "screenshots": [
+        "01-dashboard.png"
+      ],
+      "eyebrow": "SUBSCRIPTION TRACKER",
+      "headline": "Stop paying for forgotten subs",
+      "highlight": "forgotten",
+      "subline": "Every service, every currency, one monthly number"
+    },
+    {
+      "id": "no-surprises",
+      "role": "differentiator",
+      "layout": "tilted",
+      "screenshots": [
+        "02-subscriptions.png"
+      ],
+      "eyebrow": "ALL YOUR SUBS",
+      "headline": "Subscriptions without surprises",
+      "highlight": "surprises",
+      "subline": "Trials and renewals, sorted by what's due next"
+    },
+    {
+      "id": "reminders",
+      "role": "feature",
+      "layout": "device-top",
+      "screenshots": [
+        "06-calendar.png"
+      ],
+      "eyebrow": "REMINDERS",
+      "headline": "Never miss a renewal",
+      "highlight": "renewal",
+      "subline": "A heads-up lands before anything auto-renews"
+    },
+    {
+      "id": "insights",
+      "role": "feature",
+      "layout": "device-bottom",
+      "screenshots": [
+        "05-analytics.png"
+      ],
+      "eyebrow": "INSIGHTS",
+      "headline": "See your yearly burn",
+      "highlight": "yearly burn",
+      "subline": "Monthly spend, yearly projection and cost per day"
+    },
+    {
+      "id": "quick-add",
+      "role": "feature",
+      "layout": "two-devices",
+      "screenshots": [
+        "03-add-subscription.png",
+        "04-detail.png"
+      ],
+      "eyebrow": "QUICK ADD",
+      "headline": "Log it once, know it all",
+      "highlight": "once",
+      "subline": "Weekly to every 6 months, with a full renewal timeline"
+    },
+    {
+      "id": "currency",
+      "role": "proof",
+      "layout": "callouts",
+      "screenshots": [
+        "08-onboarding.png"
+      ],
+      "eyebrow": "MULTI-CURRENCY",
+      "headline": "Any currency, anywhere",
+      "highlight": "Any currency",
+      "subline": "Pay in rupees, dirhams or euros. Mix them freely.",
+      "callouts": [
+        "51 currencies",
+        "Per-subscription currency",
+        "Home currency for totals"
+      ]
+    },
+    {
+      "id": "closer",
+      "role": "closer",
+      "layout": "closer",
+      "screenshots": [
+        "07-settings.png"
+      ],
+      "headline": "Finally, subs feel simple",
+      "highlight": "simple",
+      "subline": "Everything stays on your device",
+      "badges": [
+        "Works offline",
+        "No account",
+        "Any currency"
+      ]
+    }
+  ],
+  "featureGraphic": {
+    "layout": "fg-split",
+    "headline": "Never pay for a forgotten renewal",
+    "highlight": "forgotten",
+    "screenshots": [
+      "01-dashboard.png",
+      "02-subscriptions.png"
+    ]
+  }
+}

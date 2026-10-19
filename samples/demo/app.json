@@ -1,0 +1,55 @@
+{
+  "name": "Paisa Calm",
+  "packageName": "com.example.paisacalm",
+  "category": "finance",
+  "shortDescription": "Budgets, bills and spending in one calm place",
+  "fullDescription": "Paisa Calm tracks spending across accounts, sets monthly budgets per category, scans paper receipts, and reminds you before bills are due. Everything stays on your device.",
+  "audience": "Young professionals in India managing their first salary",
+  "tone": "calm, reassuring, plain language",
+  "brandColors": [
+    "#4C3BFF",
+    "#FF8A4C"
+  ],
+  "features": [
+    "Monthly budgets per category",
+    "Receipt scanning",
+    "Bill reminders",
+    "Weekly spending insights",
+    "Works offline"
+  ],
+  "facts": [
+    "Works offline",
+    "No ads",
+    "No sign-up"
+  ],
+  "locale": "en-IN",
+  "slideCount": 6,
+  "screens": {
+    "01-home.png": {
+      "title": "Home",
+      "description": "Total balance across accounts and the latest transactions",
+      "priority": 5
+    },
+    "02-budgets.png": {
+      "title": "Budgets",
+      "description": "Monthly budget per category with progress bars",
+      "priority": 4
+    },
+    "03-insights.png": {
+      "title": "Insights",
+      "description": "Weekly spending chart and top categories",
+      "priority": 3
+    },
+    "04-scan.png": {
+      "title": "Receipt scan",
+      "description": "Point the camera at a paper receipt to add an expense",
+      "priority": 3
+    },
+    "05-bills.png": {
+      "title": "Bills",
+      "description": "Upcoming bills with due dates and reminders",
+      "priority": 2
+    }
+  },
+  "notes": "Indian rupee amounts. Emphasise privacy (on-device) and calm."
+}

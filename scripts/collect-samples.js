@@ -1,0 +1,28 @@
+// Copies finished project outputs into samples/<project>/ for the README (deck sheet, feature graphic, slides).
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import sharp from 'sharp';
+import { ROOT } from '../src/core/paths.js';
+import { loadProject } from '../src/core/project.js';
+
+const names = process.argv.slice(2);
+if (!names.length) {
+  console.log('usage: node scripts/collect-samples.js <project> [...]');
+  process.exit(1);
+}
+
+for (const name of names) {
+  const p = await loadProject(name);
+  const out = path.join(ROOT, 'samples', name);
+  await fs.rm(out, { recursive: true, force: true });
+  await fs.mkdir(path.join(out, 'slides'), { recursive: true });
+  await sharp(path.join(p.paths.runs, 'contact-sheet.png')).png({ compressionLevel: 9, palette: false }).toFile(path.join(out, 'deck.png'));
+  for (const f of p.exports.feature) await fs.copyFile(path.join(p.paths.export, 'feature', f), path.join(out, f));
+  // Half-size slides keep the repo light; full-size PNGs come from `mockup export`.
+  for (const f of p.exports.phone) {
+    await sharp(path.join(p.paths.export, 'phone', f)).resize(540).png({ compressionLevel: 9 }).toFile(path.join(out, 'slides', f));
+  }
+  await fs.copyFile(p.paths.plan, path.join(out, 'plan.json'));
+  await fs.copyFile(p.paths.app, path.join(out, 'app.json'));
+  console.log(`samples/${name}: deck.png, ${p.exports.feature.length} feature graphic, ${p.exports.phone.length} slides, plan.json, app.json`);
+}
