@@ -4,7 +4,10 @@
   "description": "Autonomous AI Play Store listing graphics generator",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test test/",
+    "start": "node src/cli.js serve",
+    "mockup": "node src/cli.js",
+    "demo": "node scripts/make-demo.js && node src/cli.js run demo"
   },
   "repository": {
     "type": "git",
@@ -22,5 +25,8 @@
     "multer": "^2.4.0",
     "playwright": "^1.64.1",
     "sharp": "^0.35.5"
+  },
+  "bin": {
+    "mockup": "src/cli.js"
   }
 }

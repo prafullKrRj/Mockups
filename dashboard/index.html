@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup Studio</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<aside class="sidebar">
+  <div class="brand"><span class="logo">◧</span> Mockup Studio</div>
+  <form id="new-project" class="new-project">
+    <input name="name" placeholder="new-project-name" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}" required>
+    <button class="btn primary" type="submit">Create</button>
+  </form>
+  <nav id="project-list" class="project-list"></nav>
+  <div class="sidebar-foot" id="projects-dir"></div>
+</aside>
+
+<main id="main">
+  <section class="empty" id="empty">
+    <h1>Play Store listing graphics, generated.</h1>
+    <p>Create a project, drop in your screenshots, describe each screen, optionally add a sample listing whose look you
+      want — then let the planner and builder agents produce a professional, ASO-friendly deck of PNGs.</p>
+  </section>
+
+  <section id="project" hidden>
+    <header class="project-head">
+      <div>
+        <h1 id="p-title"></h1>
+        <div class="muted" id="p-sub"></div>
+      </div>
+      <div class="run-bar">
+        <label>Planner <select id="planner"></select></label>
+        <label>Builder <select id="builder"></select></label>
+        <label>Rounds <input id="rounds" type="number" min="1" max="4" value="1"></label>
+        <label>Model <input id="model" placeholder="default" size="10"></label>
+        <button class="btn primary" id="run-all">▶ Generate</button>
+      </div>
+    </header>
+
+    <nav class="tabs" id="tabs">
+      <button data-tab="inputs" class="on">1 · Inputs</button>
+      <button data-tab="plan">2 · Plan &amp; theme</button>
+      <button data-tab="preview">3 · Preview &amp; edit</button>
+      <button data-tab="export">4 · Export</button>
+    </nav>
+
+    <div class="tab" id="tab-inputs">
+      <div class="cols">
+        <div class="panel">
+          <h2>App info <span class="hint">what the agents know about your app</span></h2>
+          <form id="app-form" class="form"></form>
+          <button class="btn primary" id="save-app">Save app info</button>
+        </div>
+        <div class="stack">
+          <div class="panel">
+            <h2>Screenshots <span class="hint">drop PNG/JPG — describe what each screen shows</span></h2>
+            <div class="drop" data-kind="screenshots">Drop screenshots here or <label class="link">browse<input type="file" multiple accept="image/*" hidden></label></div>
+            <div id="shots" class="shots"></div>
+          </div>
+          <div class="panel">
+            <h2>Reference theme <span class="hint">optional sample listing to replicate</span></h2>
+            <div class="drop" data-kind="reference">Drop reference images or <label class="link">browse<input type="file" multiple accept="image/*" hidden></label></div>
+            <div id="refs" class="refs"></div>
+          </div>
+          <div class="panel">
+            <h2>App icon <span class="hint">optional, used on closer slide + feature graphic</span></h2>
+            <div class="drop small" data-kind="icon">Drop icon or <label class="link">browse<input type="file" accept="image/*" hidden></label></div>
+            <img id="icon-preview" class="icon-preview" hidden alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab" id="tab-plan" hidden>
+      <div class="plan-actions">
+        <button class="btn" id="plan-heuristic">Quick plan (no AI)</button>
+        <button class="btn" id="plan-agent">Plan with agent only</button>
+        <button class="btn" id="toggle-json">Edit raw JSON</button>
+        <button class="btn primary" id="save-plan">Save &amp; render</button>
+        <span id="plan-status" class="muted"></span>
+      </div>
+      <div id="plan-validation"></div>
+      <div id="plan-empty" class="panel muted">No plan yet. Run <b>Generate</b>, or make a quick plan.</div>
+      <div id="plan-editor" class="cols" hidden>
+        <div class="panel"><h2>Theme</h2><div id="theme-form" class="form"></div></div>
+        <div class="stack">
+          <div class="panel"><h2>Slides <button class="btn tiny" id="add-slide">+ slide</button></h2><div id="slides-form"></div></div>
+          <div class="panel"><h2>Feature graphic</h2><div id="fg-form" class="form"></div></div>
+        </div>
+      </div>
+      <textarea id="plan-json" class="code" hidden spellcheck="false"></textarea>
+    </div>
+
+    <div class="tab" id="tab-preview" hidden>
+      <div class="plan-actions">
+        <button class="btn" id="refresh-preview">↻ Refresh</button>
+        <button class="btn primary" id="export-now">Export PNGs</button>
+        <span class="muted">Click a slide to edit its HTML. Edited slides become <b>custom</b> and survive re-renders.</span>
+      </div>
+      <div id="previews" class="previews"></div>
+    </div>
+
+    <div class="tab" id="tab-export" hidden>
+      <div class="plan-actions">
+        <label>Scale <select id="scale"><option value="1">1× (1080×1920)</option><option value="1.5">1.5× (1620×2880)</option><option value="2">2× (2160×3840)</option></select></label>
+        <button class="btn primary" id="export-btn">Export PNGs</button>
+        <a class="btn" id="zip-btn" href="#">⬇ Download all (zip)</a>
+      </div>
+      <div id="exports" class="exports"></div>
+    </div>
+  </section>
+</main>
+
+<div id="log-drawer" class="log-drawer" hidden>
+  <div class="log-head"><b id="log-title">Job</b><span id="log-status" class="pill"></span><span class="spacer"></span><button class="btn tiny" id="log-cancel">Cancel</button><button class="btn tiny" id="log-close">×</button></div>
+  <pre id="log"></pre>
+</div>
+
+<dialog id="slide-dialog" class="slide-dialog">
+  <div class="dialog-head"><b id="dlg-title"></b><span class="spacer"></span>
+    <button class="btn" id="dlg-reset">Reset to template</button>
+    <button class="btn primary" id="dlg-save">Save HTML</button>
+    <button class="btn" id="dlg-close">Close</button></div>
+  <div class="dialog-body">
+    <div class="dlg-preview"><iframe id="dlg-frame" title="slide preview"></iframe></div>
+    <textarea id="dlg-code" class="code" spellcheck="false"></textarea>
+  </div>
+</dialog>
+
+<div id="toast" class="toast" hidden></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

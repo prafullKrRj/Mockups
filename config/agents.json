@@ -1,0 +1,28 @@
+{
+  "$comment": "Agent CLI adapters. Placeholders: {prompt} {project} {root} {images} (expanded via imageArgs per image) {model}. Add any headless CLI that can read/write files in a working directory.",
+  "claude": {
+    "label": "Claude Code",
+    "command": "claude",
+    "args": ["-p", "{prompt}", "--permission-mode", "acceptEdits", "--allowedTools", "Read,Write,Edit,Glob,Grep", "--output-format", "stream-json", "--verbose"],
+    "imageArgs": [],
+    "imagesViaPrompt": true,
+    "modelArgs": ["--model", "{model}"],
+    "output": "claude-stream-json"
+  },
+  "codex": {
+    "label": "Codex",
+    "command": "codex",
+    "args": ["exec", "--skip-git-repo-check", "-s", "workspace-write", "-C", "{project}", "{images}", "--", "{prompt}"],
+    "imageArgs": ["-i", "{image}"],
+    "modelArgs": ["-m", "{model}"],
+    "output": "text"
+  },
+  "muse": {
+    "label": "Muse",
+    "command": "muse",
+    "args": ["exec", "--workspace", "{project}", "{images}", "{prompt}"],
+    "imageArgs": ["--image", "{image}"],
+    "modelArgs": ["--model", "{model}"],
+    "output": "text"
+  }
+}
