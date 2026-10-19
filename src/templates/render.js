@@ -262,10 +262,11 @@ export function renderSlide({ plan, slide, index, shots, app }) {
       break;
     }
     case 'device-top': {
-      const w = 760;
+      // Bleed only the status bar off the top so the screen's own header stays visible.
+      const w = 620;
       const dh = deviceHeight(w, dims(s1), theme.device.frame);
-      focal = { x: W / 2, y: 700, w };
-      parts.push(deviceHtml({ file: s1, dims: dims(s1), w, x: (W - w) / 2, y: 1230 - dh, theme }));
+      focal = { x: W / 2, y: 600, w };
+      parts.push(deviceHtml({ file: s1, dims: dims(s1), w, x: (W - w) / 2, y: Math.min(-90, 1250 - dh), theme }));
       parts.push(textBlock({ slide, x: M, y: 1320, w: textW, h: 520 }));
       break;
     }
