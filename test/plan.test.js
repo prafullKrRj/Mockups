@@ -20,7 +20,7 @@ test('heuristic plan is valid and puts the highest-priority screen first', () =>
   assert.deepEqual(v.errors, []);
   assert.equal(plan.slides[0].screenshots[0], 'a.png');
   assert.equal(plan.slides[0].layout, 'hero');
-  assert.equal(plan.theme.preset, 'swiss-paper');
+  assert.equal(plan.theme.preset, 'sage-mist');
 });
 
 test('validator rejects unknown screenshots, bad highlights and policy-breaking copy', () => {

@@ -39,7 +39,8 @@
       "properties": {
         "preset": {
           "enum": ["aurora-light", "midnight-glow", "bold-gradient", "swiss-paper", "clay-wellness", "neon-night",
-            "editorial-serif", "candy-pop", "ocean-calm", "mono-minimal"]
+            "editorial-serif", "candy-pop", "ocean-calm", "mono-minimal", "sage-mist", "sand-dune", "harbor-night",
+            "dusk-rose", "fog-lilac"]
         },
         "colors": {
           "type": "object",
@@ -59,7 +60,7 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "type": { "enum": ["linear", "radial", "mesh", "solid"] },
+            "type": { "enum": ["linear", "radial", "mesh", "solid", "soft"] },
             "angle": { "type": "number", "minimum": 0, "maximum": 360 }
           }
         },
@@ -73,6 +74,7 @@
           }
         },
         "headlineCase": { "enum": ["none", "upper"] },
+        "eyebrowStyle": { "enum": ["quiet", "caps"] },
         "highlightStyle": { "enum": ["color", "gradient", "marker", "underline", "none"] },
         "decor": {
           "type": "array",
