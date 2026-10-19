@@ -3,8 +3,9 @@ import path from 'node:path';
 import { ROOT, SKILLS_DIR, SCHEMAS_DIR } from './paths.js';
 import { loadProject, readJson, writeJson } from './project.js';
 import { heuristicPlan, validatePlan, referencePalette } from './plan.js';
-import { buildProject, deckEntries } from './build.js';
+import { buildProject, deckEntries, setEntryMode } from './build.js';
 import { exportProject } from './export.js';
+import { translateProject } from './translate.js';
 import { runAgent } from './agents.js';
 
 const skill = (f) => fs.readFile(path.join(SKILLS_DIR, f), 'utf8');
@@ -46,7 +47,7 @@ async function builderPrompt(project, { round, exported }) {
   const skills = ['builder.md', 'visual-craft.md', 'vendor/frontend-design/SKILL.md', 'design-system.md', 'guardrails.md', 'play-store-specs.md',
     ...(project.references.length ? ['theme-replication.md'] : [])];
   const qa = project.qa ? JSON.stringify(project.qa.slides, null, 2) : '{}';
-  const html = await fs.readFile(path.join(project.paths.build, `${project.plan.slides[0].id}.html`), 'utf8');
+  const html = await fs.readFile(path.join(project.paths.build, deckEntries(project.plan, project.app)[0].file), 'utf8');
   return `You are the Listing Builder agent of Mockup Studio (review round ${round}). Your working directory is the project folder.
 
 ${await skillsBundle(skills)}
@@ -73,7 +74,7 @@ ${html}
 ${exported.map((f) => `- ${f}`).join('\n')}
 
 Review the exported PNGs against the reference images (if any) and the craft checklist, then improve the deck by
-editing \`plan.json\` and, only where necessary, \`build/<slide-id>.html\` (set that slide's "mode": "custom").
+editing \`plan.json\` and, only where necessary, these HTML files:\n${deckEntries(project.plan, project.app).map((e) => `- build/${e.file} (locale ${e.locale}; set mode["${e.locale}"] to "custom" for localized projects, or mode to "custom" for v1)`).join("\n")}
 If the deck already meets the bar, change nothing. Reply with a short list of what you changed.`;
 }
 
@@ -83,7 +84,7 @@ If the deck already meets the bar, change nothing. Reply with a short list of wh
  *            rounds, model, scale, log, signal }
  */
 export async function runPipeline(name, options = {}) {
-  const { steps = ['plan', 'build', 'export'], planner = 'heuristic', builder = 'template', rounds = 1, model, scale = 1, signal } = options;
+  const { steps = ['plan', 'translate', 'build', 'export'], translator = null, planner = 'heuristic', builder = 'template', rounds = 1, model, scale = 1, signal } = options;
   const log = options.log ?? ((m) => console.log(m));
   const stage = (s) => log(`== ${s} ==`, 'stage');
   let project = await loadProject(name);
@@ -127,6 +128,12 @@ export async function runPipeline(name, options = {}) {
     project = await loadProject(name);
   }
 
+  if (steps.includes('translate') && translator) {
+    stage(`translate (${translator})`);
+    await translateProject(project, { agentId: translator, model, log, signal });
+    project = await loadProject(name);
+  }
+
   if (steps.includes('build')) {
     stage('build (template renderer)');
     const { entries, warnings } = await buildProject(project, { force: steps.includes('plan') });
@@ -149,9 +156,9 @@ export async function runPipeline(name, options = {}) {
       signal?.throwIfAborted();
       stage(`review round ${round} (${builder})`);
       const planBefore = project.plan;
-      const exported = [...project.exports.phone.map((f) => `export/phone/${f}`), ...project.exports.feature.map((f) => `export/feature/${f}`)];
+      const exported = Object.entries(project.exportsByLocale).flatMap(([locale, files]) => ['phone', 'feature'].flatMap((kind) => files[kind].map((f) => `export/${project.app.locales ? `${locale}/` : ''}${kind}/${f}`)));
       // Contact sheet + feature graphic give the whole deck at a glance; full-size slides stay readable on disk.
-      const images = ['.runs/contact-sheet.png', ...project.exports.feature.map((f) => `export/feature/${f}`), ...project.references.map((r) => `input/reference/${r.file}`)];
+      const images = ['.runs/contact-sheet.png', ...exported.filter((f) => f.includes('/feature/')), ...project.references.map((r) => `input/reference/${r.file}`)];
       await runAgent({ agentId: builder, prompt: await builderPrompt(project, { round, exported }), project: paths.dir, root: ROOT, images, model, log, signal });
 
       // Guardrail 1: the plan must still validate, else roll it back.
@@ -167,20 +174,19 @@ export async function runPipeline(name, options = {}) {
       const { qa } = await doExport();
 
       // Guardrail 2: custom slides that fail QA are reverted to their template render.
-      const failed = deckEntries(project.plan).filter((e) => e.mode === 'custom' && qa.slides[e.id]?.errors.length);
+      const failed = deckEntries(project.plan, project.app).filter((e) => e.mode === 'custom' && qa.slides[e.key]?.errors.length);
       if (failed.length) {
         for (const e of failed) {
-          log(`custom ${e.id} failed QA (${qa.slides[e.id].errors.join('; ')}) — reverting to template`, 'error');
-          await fs.copyFile(path.join(paths.build, `${e.id}.template.html`), path.join(paths.build, e.file));
+          log(`custom ${e.id} failed QA (${qa.slides[e.key].errors.join('; ')}) — reverting to template`, 'error');
+          await fs.copyFile(path.join(paths.build, e.templateFile), path.join(paths.build, e.file));
         }
         const plan = structuredClone(project.plan);
         for (const e of failed) {
-          if (e.kind === 'feature') plan.featureGraphic.mode = 'template';
-          else plan.slides[e.index].mode = 'template';
+          setEntryMode(plan, e, 'template', project.app);
         }
         await writeJson(paths.plan, plan);
         project = await loadProject(name);
-        await exportProject(project, { scale, only: failed.map((e) => e.id), log });
+        await exportProject(project, { scale, only: failed.map((e) => e.key), log });
         project = await loadProject(name);
       }
     }

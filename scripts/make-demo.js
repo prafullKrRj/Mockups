@@ -3,7 +3,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from 'playwright';
 import { projectPaths } from '../src/core/paths.js';
-import { writeJson } from '../src/core/project.js';
+import { heuristicPlan } from '../src/core/plan.js';
+import { writeJson, readJson } from '../src/core/project.js';
 
 const p = projectPaths('demo');
 
@@ -83,7 +84,7 @@ await writeJson(p.app, {
   brandColors: ['#4C3BFF', '#FF8A4C'],
   features: ['Monthly budgets per category', 'Receipt scanning', 'Bill reminders', 'Weekly spending insights', 'Works offline'],
   facts: ['Works offline', 'No ads', 'No sign-up'],
-  locale: 'en-IN',
+  locale: 'en-US', locales: ['en-US', 'hi-IN'],
   slideCount: 6,
   screens: {
     '01-home.png': { title: 'Home', description: 'Total balance across accounts and the latest transactions', priority: 5 },
@@ -95,3 +96,18 @@ await writeJson(p.app, {
   notes: 'Indian rupee amounts. Emphasise privacy (on-device) and calm.',
 });
 console.log(`demo project written to ${p.dir}`);
+
+const app = await readJson(p.app);
+const plan = heuristicPlan({ app, screenshots: Object.keys(screens).map((file) => ({ file, width: 1080, height: 2400 })) });
+const hiHeadlines = ['पैसे का हिसाब आसान', 'हर खर्च का बजट', 'खर्च को समझें', 'रसीद स्कैन करें', 'बिल समय पर चुकाएँ'];
+const hiSublines = ['सभी खातों का बैलेंस और लेनदेन', 'हर श्रेणी के मासिक बजट पर नज़र', 'साप्ताहिक खर्च और मुख्य श्रेणियाँ', 'रसीद स्कैन करके खर्च जोड़ें', 'आने वाले बिल और उनकी तारीखें'];
+const badgeCopy = { 'Works offline': 'ऑफ़लाइन चले', 'No ads': 'विज्ञापन नहीं', 'No sign-up': 'साइन-अप नहीं' };
+const pair = (en, hi) => ({ 'en-US': en, 'hi-IN': hi });
+plan.slides.forEach((slide, i) => {
+  slide.headline = pair(slide.headline, hiHeadlines[i]);
+  if (slide.subline) slide.subline = pair(slide.subline, hiSublines[i]);
+  if (slide.eyebrow) slide.eyebrow = pair(slide.eyebrow, 'पैसे का हिसाब');
+  if (slide.badges) slide.badges = slide.badges.map((text) => pair(text, badgeCopy[text]));
+});
+plan.featureGraphic.headline = pair(plan.featureGraphic.headline, 'पैसे का हिसाब आसान');
+await writeJson(p.plan, plan);

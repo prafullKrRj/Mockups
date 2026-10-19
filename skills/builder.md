@@ -27,3 +27,11 @@ Read first: `design-system.md`, `guardrails.md`, `play-store-specs.md`, and `the
 - Accent colour used sparingly: highlight word, one decorative element, badges.
 
 Never touch `input/` or `app.json`. Never remove the real screenshots or replace them with drawn UI.
+
+## Localized decks
+
+Use the exact filenames listed in the run prompt: localized HTML is
+`build/<locale>--<slide-id>.html`, and PNGs are `export/<locale>/phone/` or
+`export/<locale>/feature/`. Set the affected slide's `mode` to a locale map,
+e.g. `{ "en-US": "template", "hi-IN": "custom" }`, so other locales keep their modes.
+Preserve existing locale maps when editing copy; update only intended translations.

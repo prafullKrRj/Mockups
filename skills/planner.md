@@ -48,3 +48,11 @@ exist — `theme-replication.md`.
 ```
 
 Only include `theme` keys you want to override; the preset fills the rest.
+
+## Localized copy
+
+`app.locales`, when present, lists target locales; first locale is source. Copy may
+remain a shared string or become a map keyed by exact locale tags. Include every
+configured locale in each map. This applies to headline, highlight, subline,
+eyebrow, each callout/badge item, and feature-graphic headline/highlight/badge items.
+Each locale must satisfy the same limits and highlight-substring rules.

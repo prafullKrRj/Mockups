@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import Ajv from 'ajv';
 import sharp from 'sharp';
+import { projectLocales, copyFields, localizePlan } from './locales.js';
 import { SCHEMAS_DIR } from './paths.js';
 import { PRESETS, presetForCategory, resolveTheme, contrast } from '../templates/themes.js';
 
@@ -9,12 +10,27 @@ const schema = JSON.parse(await fs.readFile(path.join(SCHEMAS_DIR, 'plan.schema.
 const validateSchema = new Ajv({ allErrors: true, strict: false }).compile(schema);
 
 /** Schema + semantic checks. Errors block rendering; warnings are surfaced to agents and the dashboard. */
-export function validatePlan(plan, project) {
+export function validatePlan(plan, project, { resolved = false } = {}) {
   const errors = [];
   const warnings = [];
   if (!validateSchema(plan)) {
     for (const e of validateSchema.errors) errors.push(`${e.instancePath || '/'} ${e.message}${e.params?.allowedValues ? ` (${e.params.allowedValues.join(', ')})` : ''}`);
     return { ok: false, errors, warnings };
+  }
+  if (!resolved) {
+    let locales;
+    try { locales = projectLocales(project.app); } catch (e) { return { ok: false, errors: [e.message], warnings }; }
+    const fields = copyFields(plan);
+    const maps = fields.filter(({ value }) => typeof value === 'object');
+    for (const { path, value } of maps) {
+      for (const locale of locales) if (!(locale in value)) errors.push(`${path}: missing locale ${locale}`);
+    }
+    for (const locale of new Set([...locales, ...maps.flatMap(({ value }) => Object.keys(value))])) {
+      const result = validatePlan(localizePlan(plan, locale), project, { resolved: true });
+      errors.push(...result.errors.map((e) => `[${locale}] ${e}`));
+      warnings.push(...result.warnings.map((e) => `[${locale}] ${e}`));
+    }
+    return { ok: errors.length === 0, errors, warnings };
   }
   const files = new Set(project.screenshots.map((s) => s.file));
   const ids = new Set();

@@ -22,7 +22,11 @@
     "No ads",
     "No sign-up"
   ],
-  "locale": "en-IN",
+  "locale": "en-US",
+  "locales": [
+    "en-US",
+    "hi-IN"
+  ],
   "slideCount": 6,
   "screens": {
     "01-home.png": {
