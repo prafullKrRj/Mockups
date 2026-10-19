@@ -116,5 +116,20 @@ export async function exportProject(project, { scale = 1, only = null, log = () 
     qa.slides = { ...prev.slides, ...qa.slides };
   }
   await writeJson(path.join(paths.runs, 'qa.json'), qa);
+  await contactSheet(paths);
   return { results, qa };
+}
+
+/** One image of the whole phone deck — cheaper for review agents than N full-size PNGs. */
+export async function contactSheet(paths) {
+  const dir = path.join(paths.export, 'phone');
+  const files = (await fs.readdir(dir)).filter((f) => /\.(png|jpg)$/.test(f)).sort();
+  if (!files.length) return null;
+  const [w, h, gap] = [360, 640, 24];
+  const tiles = await Promise.all(files.map((f) => sharp(path.join(dir, f)).resize(w, h).toBuffer()));
+  const out = path.join(paths.runs, 'contact-sheet.png');
+  await sharp({ create: { width: files.length * (w + gap) + gap, height: h + gap * 2, channels: 3, background: '#1b1c20' } })
+    .composite(tiles.map((input, i) => ({ input, left: gap + i * (w + gap), top: gap })))
+    .png().toFile(out);
+  return out;
 }

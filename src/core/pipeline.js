@@ -69,6 +69,7 @@ ${html}
 \`\`\`
 
 ## Exported PNGs to review
+\`.runs/contact-sheet.png\` shows the whole phone deck side by side. Full-size files (open any you need to inspect closely):
 ${exported.map((f) => `- ${f}`).join('\n')}
 
 Review the exported PNGs against the reference images (if any) and the craft checklist, then improve the deck by
@@ -149,7 +150,8 @@ export async function runPipeline(name, options = {}) {
       stage(`review round ${round} (${builder})`);
       const planBefore = project.plan;
       const exported = [...project.exports.phone.map((f) => `export/phone/${f}`), ...project.exports.feature.map((f) => `export/feature/${f}`)];
-      const images = [...exported, ...project.references.map((r) => `input/reference/${r.file}`)];
+      // Contact sheet + feature graphic give the whole deck at a glance; full-size slides stay readable on disk.
+      const images = ['.runs/contact-sheet.png', ...project.exports.feature.map((f) => `export/feature/${f}`), ...project.references.map((r) => `input/reference/${r.file}`)];
       await runAgent({ agentId: builder, prompt: await builderPrompt(project, { round, exported }), project: paths.dir, root: ROOT, images, model, log, signal });
 
       // Guardrail 1: the plan must still validate, else roll it back.
