@@ -53,3 +53,38 @@ test('meta lists agents and presets', async () => {
   assert.ok(data.presets.includes('sage-mist'));
   assert.ok(data.agents.some((a) => a.id === 'claude'));
 });
+
+test('locale configuration rejects unsafe paths before saving', async () => {
+  const result = await call('PUT', '/api/projects/alpha/app', { name: 'alpha', locales: ['../../outside'] });
+  assert.equal(result.status, 422);
+  assert.equal((await call('GET', '/api/projects/alpha')).data.app.locales, undefined);
+});
+
+test('localized plans expose separate deck entries and select HTML by locale', async () => {
+  const sharp = (await import('sharp')).default;
+  const { heuristicPlan } = await import('../src/core/plan.js');
+  const { loadProject } = await import('../src/core/project.js');
+  await call('POST', '/api/projects', { name: 'local', app: { name: 'Local', locales: ['en-US', 'hi-IN'] } });
+  await sharp({ create: { width: 108, height: 240, channels: 3, background: '#ffffff' } }).png().toFile(path.join(tmp, 'local/input/screenshots/a.png'));
+  const project = await loadProject('local');
+  const plan = heuristicPlan(project);
+  plan.slides[0].headline = { 'en-US': 'Your money', 'hi-IN': 'आपका पैसा' };
+  const saved = await call('PUT', '/api/projects/local/plan', plan);
+  assert.equal(saved.status, 200);
+  assert.equal(saved.data.deck.length, (plan.slides.length + 1) * 2);
+  assert.deepEqual(Object.keys(saved.data.exportsByLocale), ['en-US', 'hi-IN']);
+  const url = `${base}/api/projects/local/slides/${plan.slides[0].id}/html`;
+  const html = await fetch(`${url}?locale=hi-IN`);
+  assert.equal(html.status, 200);
+  assert.match(await html.text(), /आपका पैसा/);
+  assert.equal((await fetch(`${url}?locale=missing`)).status, 404);
+  const edited = await fetch(`${url}?locale=hi-IN`, { method: 'PUT', headers: { 'Content-Type': 'text/plain' }, body: '<h1>Hindi custom</h1>' });
+  assert.equal(edited.status, 200);
+  assert.match(await (await fetch(`${url}?locale=en-US`)).text(), /Your money/);
+  assert.equal(await (await fetch(`${url}?locale=hi-IN`)).text(), '<h1>Hindi custom</h1>');
+  await fetch(`${url}?locale=en-US`, { method: 'PUT', headers: { 'Content-Type': 'text/plain' }, body: '<h1>English custom</h1>' });
+  assert.equal((await call('POST', `/api/projects/local/slides/${plan.slides[0].id}/reset?locale=hi-IN`)).status, 200);
+  assert.equal(await (await fetch(`${url}?locale=en-US`)).text(), '<h1>English custom</h1>');
+  assert.match(await (await fetch(`${url}?locale=hi-IN`)).text(), /आपका पैसा/);
+
+});

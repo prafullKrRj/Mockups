@@ -8,7 +8,7 @@ import { randomUUID } from 'node:crypto';
 import { ROOT, PROJECTS_DIR, IMAGE_EXT, assertFileName, projectPaths } from './core/paths.js';
 import { createProject, duplicateProject, listProjects, loadProject, saveApp, writeJson } from './core/project.js';
 import { validatePlan, heuristicPlan } from './core/plan.js';
-import { buildProject, deckEntries } from './core/build.js';
+import { buildProject, deckEntries, setEntryMode } from './core/build.js';
 import { exportProject } from './core/export.js';
 import { runPipeline } from './core/pipeline.js';
 import { listAgents } from './core/agents.js';
@@ -88,7 +88,7 @@ export function createApp() {
 
   app.get('/api/projects/:name/slides/:id/html', wrap(async (req, res) => {
     const p = await loadProject(req.params.name);
-    const e = deckEntries(p.plan).find((x) => x.id === req.params.id);
+    const e = deckEntries(p.plan, p.app).find((x) => x.id === req.params.id && (!req.query.locale || x.locale === req.query.locale));
     if (!e) return res.status(404).json({ error: 'slide not found' });
     res.type('text/plain').send(await fs.readFile(path.join(p.paths.build, e.file), 'utf8'));
   }));
@@ -96,23 +96,21 @@ export function createApp() {
   // Hand-edited HTML turns the slide into a custom slide so later re-renders keep it.
   app.put('/api/projects/:name/slides/:id/html', express.text({ limit: '2mb', type: '*/*' }), wrap(async (req, res) => {
     const p = await loadProject(req.params.name);
-    const e = deckEntries(p.plan).find((x) => x.id === req.params.id);
+    const e = deckEntries(p.plan, p.app).find((x) => x.id === req.params.id && (!req.query.locale || x.locale === req.query.locale));
     if (!e) return res.status(404).json({ error: 'slide not found' });
     await fs.writeFile(path.join(p.paths.build, e.file), req.body);
     const plan = structuredClone(p.plan);
-    if (e.kind === 'feature') plan.featureGraphic.mode = 'custom';
-    else plan.slides[e.index].mode = 'custom';
+    setEntryMode(plan, e, 'custom', p.app);
     await writeJson(p.paths.plan, plan);
     res.json(serialize(await loadProject(req.params.name)));
   }));
 
   app.post('/api/projects/:name/slides/:id/reset', wrap(async (req, res) => {
     const p = await loadProject(req.params.name);
-    const e = deckEntries(p.plan).find((x) => x.id === req.params.id);
+    const e = deckEntries(p.plan, p.app).find((x) => x.id === req.params.id && (!req.query.locale || x.locale === req.query.locale));
     if (!e) return res.status(404).json({ error: 'slide not found' });
     const plan = structuredClone(p.plan);
-    if (e.kind === 'feature') delete plan.featureGraphic.mode;
-    else delete plan.slides[e.index].mode;
+    setEntryMode(plan, e, 'template', p.app);
     await writeJson(p.paths.plan, plan);
     await fs.rm(path.join(p.paths.build, e.file), { force: true });
     await buildProject(await loadProject(req.params.name));
@@ -148,8 +146,8 @@ export function createApp() {
   app.post('/api/projects/:name/run', wrap(async (req, res) => {
     const name = req.params.name;
     await loadProject(name);
-    const { steps, planner, builder, rounds, model, scale } = req.body ?? {};
-    const job = startJob(name, (j) => runPipeline(name, { steps, planner, builder, rounds: Number(rounds) || 1, model: model || undefined, scale: Number(scale) || 1, log: j.log, signal: j.controller.signal }));
+    const { steps, planner, translator, builder, rounds, model, scale } = req.body ?? {};
+    const job = startJob(name, (j) => runPipeline(name, { steps, planner, translator, builder, rounds: Number(rounds) || 1, model: model || undefined, scale: Number(scale) || 1, log: j.log, signal: j.controller.signal }));
     res.status(202).json({ id: job.id });
   }));
 
@@ -198,7 +196,7 @@ export function createApp() {
 
 function serialize(p) {
   const { paths, ...rest } = p;
-  return { ...rest, dir: paths.dir, deck: p.plan ? deckEntries(p.plan) : [], validation: p.plan ? validatePlan(p.plan, p) : null };
+  return { ...rest, dir: paths.dir, deck: p.plan ? deckEntries(p.plan, p.app) : [], validation: p.plan ? validatePlan(p.plan, p) : null };
 }
 
 export async function startServer(port = 4280) {

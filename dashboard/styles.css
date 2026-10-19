@@ -86,8 +86,8 @@ input[type=color] { padding: 2px; width: 44px; height: 34px; }
 .preview .meta { display: flex; gap: 6px; align-items: center; font-size: 12px; }
 .preview .issues { font-size: 11.5px; color: var(--err); max-width: 270px; }
 .exports { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
-.exports figure { margin: 0; display: flex; flex-direction: column; gap: 6px; }
-.exports img { border-radius: 10px; border: 1px solid var(--line); display: block; }
+.exports figure { max-width: 100%; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.exports img { max-width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--line); display: block; }
 .exports figcaption { font-size: 12px; display: flex; justify-content: space-between; gap: 8px; }
 .exports a { color: var(--accent-2); }
 .log-drawer { position: fixed; right: 18px; bottom: 18px; width: min(720px, calc(100vw - 300px)); max-height: 46vh; background: #0a0b0e; border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column; box-shadow: 0 30px 80px rgba(0,0,0,.6); z-index: 20; }

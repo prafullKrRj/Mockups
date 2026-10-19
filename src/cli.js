@@ -20,9 +20,10 @@ Usage:
 
 Run options:
   --planner <heuristic|claude|codex|muse>  planning agent (default heuristic)
+  --translator <claude|codex|muse>        fill missing locales (optional)
   --builder <template|claude|codex|muse>   review/build agent (default template)
   --rounds <n>                             builder review rounds (default 1)
-  --steps plan,build,export                subset of stages
+  --steps plan,translate,build,export                subset of stages
   --model <id>                             model passed to the agent CLI
   --scale <1|1.5|2>                        phone export scale (1 → 1080×1920)
 
@@ -32,6 +33,7 @@ const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: {
     planner: { type: 'string', default: 'heuristic' },
+    translator: { type: 'string' },
     builder: { type: 'string', default: 'template' },
     rounds: { type: 'string', default: '1' },
     steps: { type: 'string' },
@@ -63,7 +65,7 @@ try {
       break;
     case 'run': {
       const result = await runPipeline(name, {
-        planner: values.planner, builder: values.builder, rounds: Number(values.rounds), model: values.model,
+        planner: values.planner, translator: values.translator, builder: values.builder, rounds: Number(values.rounds), model: values.model,
         scale: Number(values.scale), steps: values.steps?.split(','), log,
       });
       // Non-zero exit when any slide fails QA, so CI and scripts can gate on it.

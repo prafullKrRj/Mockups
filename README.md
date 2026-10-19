@@ -185,7 +185,7 @@ agents, for example `--planner codex --builder claude`. Use `--model <id>` to pi
 ```
 node src/cli.js new <project>
 node src/cli.js run <project> [--planner heuristic|claude|codex|muse] [--builder template|claude|codex|muse]
-                              [--rounds n] [--steps plan,build,export] [--model id] [--scale 1|1.5|2]
+                              [--rounds n] [--translator claude|codex|muse] [--steps plan,translate,build,export] [--model id] [--scale 1|1.5|2]
 node src/cli.js build <project>        # re-render HTML from plan.json (keeps custom slides)
 node src/cli.js export <project>       # PNGs + QA
 node src/cli.js validate <project>
@@ -220,6 +220,58 @@ per slide, identical grey shadows. Mockup Studio pushes against this in three pl
 3. **Validator:** it warns when every slide has an eyebrow, when more than half the slides have highlights, when copy
    contains middle dots or arrows, and when there are more than two decor items. Agents see these warnings and fix
    them.
+
+## Localisation
+
+Set `app.json` to `"locales": ["en-US", "hi-IN"]`; first locale is source.
+Existing projects with only `locale` keep their v1 paths. Copy can remain a shared
+string or use locale maps. Every map must include each configured locale:
+
+```json
+{
+  "headline": { "en-US": "Your money", "hi-IN": "आपका पैसा" },
+  "highlight": { "en-US": "money", "hi-IN": "पैसा" },
+  "badges": [{ "en-US": "Offline", "hi-IN": "ऑफ़लाइन" }]
+}
+```
+
+Maps work for slide headline, highlight, subline, eyebrow, each callout/badge item,
+and feature-graphic headline, highlight and badge items. Limits, policy and
+highlight checks run for every locale. Empty optional list translations are hidden
+only in that locale; removing Hindi badges keeps English copy.
+
+```bash
+node src/cli.js run my-app --translator claude
+node src/cli.js run my-app --steps translate,build,export --translator codex
+```
+
+Translation preserves existing source and translated copy, fills missing entries,
+and rejects invalid output or non-copy changes, restoring the previous plan.
+Without a translator, shared strings stay shared. Devanagari, Arabic, Hebrew,
+Japanese, Korean and Chinese locales select Noto fonts; RTL scripts set `dir="rtl"`.
+Fonts require access to Google Fonts during rendering.
+
+Localized HTML uses `build/<locale>--<slide-id>.html`, keeping screenshot paths
+relative to the existing inputs. PNGs and the ZIP use `export/<locale>/phone/` and
+`export/<locale>/feature/`. Full export removes obsolete generated locale folders
+and v1 image folders. QA keys use `<locale>/<slide-id>`; each locale has its own
+`.runs/contact-sheet-<locale>.png`, with the first locale also available at the
+legacy `.runs/contact-sheet.png` path.
+
+Dashboard header switches locale for plan editing, previews, HTML editing, export
+and store preview. Select a translation agent before Generate to fill locales.
+Custom modes can be per locale, e.g. `"mode": {"en-US":"custom","hi-IN":"template"}`.
+Resetting one locale preserves other locales' custom HTML.
+
+API project responses add `exportsByLocale` and deck-entry `locale`, `key`,
+`templateFile` fields; `exports` remains the first locale for existing callers.
+Slide HTML GET/PUT and reset POST accept `?locale=hi-IN`; omitted locale selects
+first deck entry. Invalid locale configuration returns 422 before saving.
+
+`npm run demo` renders English and Hindi without AI. Afterward,
+`node scripts/verify-localisation.js` tests a disposable copy at 1440px and 430px,
+checks editing and font loading, and saves screenshots plus a ZIP under
+`projects/demo/.runs/localisation-review/`.
 
 ## Roadmap
 

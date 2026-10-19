@@ -9,7 +9,7 @@ const DECOR = ['blobs', 'grid', 'dots', 'glow', 'rings', 'noise'];
 const CATEGORIES = ['finance', 'productivity', 'health', 'fitness', 'ai', 'social', 'food', 'travel', 'education', 'utilities', 'business', 'lifestyle', 'games', 'kids', 'music', 'weather', 'medical', 'general'];
 const COLOR_KEYS = ['bg', 'bg2', 'text', 'muted', 'accent', 'accent2', 'surface', 'surfaceText'];
 
-const state = { meta: null, project: null, name: null, plan: null, job: null, tab: 'inputs', bust: Date.now() };
+const state = { meta: null, project: null, name: null, plan: null, job: null, tab: 'inputs', locale: null, bust: Date.now() };
 
 async function api(path, opts = {}) {
   const res = await fetch(path, {
@@ -33,6 +33,27 @@ function toast(msg, err = false) {
 
 const files = (kind, f) => `/files/${encodeURIComponent(state.name)}/${kind}/${encodeURIComponent(f)}?t=${state.bust}`;
 
+const locales = () => state.project.app.locales ?? [state.project.app.locale || 'en-US'];
+const copy = (value = '') => Array.isArray(value) ? value.map(copy) : typeof value === 'object' ? value[state.locale] ?? '' : value;
+const exportsForLocale = () => state.project.exportsByLocale?.[state.locale] ?? state.project.exports;
+const exportKind = (kind) => `export/${state.project.app.locales ? `${state.locale}/` : ''}${kind}`;
+const localeQuery = () => `?locale=${encodeURIComponent(state.locale)}`;
+function putCopy(obj, key, value) {
+  const previous = obj[key];
+  const assign = (old, next) => {
+    if (typeof old === 'object' && old !== null) return { ...old, [state.locale]: next };
+    if (old === next || locales().length === 1) return next;
+    return { ...Object.fromEntries(locales().map((locale) => [locale, old ?? ''])), [state.locale]: next };
+  };
+  if (Array.isArray(value)) {
+    const count = Math.max(value.length, previous?.length ?? 0);
+    const items = Array.from({ length: count }, (_, i) => assign(previous?.[i], value[i] ?? ''));
+    if (!items.length) delete obj[key];
+    else obj[key] = items;
+  } else if (value === '' && previous == null) delete obj[key];
+  else obj[key] = assign(previous, value);
+}
+
 // ---------- projects ----------
 async function loadProjects() {
   const list = await api('/api/projects');
@@ -49,6 +70,8 @@ async function openProject(name) {
 
 function setProject(p) {
   state.project = p;
+  if (!locales().includes(state.locale)) state.locale = locales()[0];
+  $('#locale').innerHTML = locales().map((locale) => `<option ${locale === state.locale ? 'selected' : ''}>${h(locale)}</option>`).join('');
   state.plan = p.plan ? structuredClone(p.plan) : null;
   state.bust = Date.now();
   $('#p-title').textContent = p.app.name;
@@ -71,7 +94,7 @@ function renderInputs() {
     ${field('name', 'App name')}
     ${field('packageName', 'Package name')}
     <label>Category<select name="category">${CATEGORIES.map((c) => `<option ${c === app.category ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
-    ${field('locale', 'Listing locale')}
+    <label>Listing locales (comma separated)<input name="locales" value="${h((app.locales ?? [app.locale || 'en-US']).join(', '))}"></label>
     ${field('shortDescription', 'Short description (Play, ≤80 chars)', 'text', true)}
     ${field('fullDescription', 'Full description / what the app does', 'textarea', true)}
     ${field('audience', 'Target audience', 'text', true)}
@@ -107,7 +130,9 @@ function collectApp() {
   const f = new FormData($('#app-form'));
   const lines = (k) => String(f.get(k) ?? '').split('\n').map((s) => s.trim()).filter(Boolean);
   const app = { ...state.project.app };
-  for (const k of ['name', 'packageName', 'category', 'locale', 'shortDescription', 'fullDescription', 'audience', 'tone', 'notes']) app[k] = String(f.get(k) ?? '');
+  for (const k of ['name', 'packageName', 'category', 'shortDescription', 'fullDescription', 'audience', 'tone', 'notes']) app[k] = String(f.get(k) ?? '');
+  const selected = csv(String(f.get('locales') ?? ''));
+  if (app.locales || selected.length !== 1 || selected[0] !== app.locale) app.locales = selected;
   app.features = lines('features');
   app.facts = lines('facts');
   app.slideCount = Number(f.get('slideCount')) || 6;
@@ -176,20 +201,20 @@ function renderPlan() {
 
   $('#slides-form').innerHTML = plan.slides.map((s, i) => `
     <div class="slide-card" data-i="${i}">
-      <header><b>${i + 1}. ${h(s.id)}</b>${s.mode === 'custom' ? '<span class="pill custom">custom</span>' : ''}
+      <header><b>${i + 1}. ${h(s.id)}</b>${copy(s.mode) === 'custom' ? '<span class="pill custom">custom</span>' : ''}
         <button class="btn tiny" data-move="-1">↑</button><button class="btn tiny" data-move="1">↓</button><button class="btn tiny danger" data-remove>✕</button></header>
       <div class="form">
         <label>Layout ${sel('layout', LAYOUTS, s.layout)}</label>
         <label>Role ${sel('role', ['', ...ROLES], s.role ?? '')}</label>
         <label>Screenshot ${sel('shot0', shots, s.screenshots[0])}</label>
         <label>2nd screenshot ${sel('shot1', ['', ...shots], s.screenshots[1] ?? '')}</label>
-        <label class="wide">Headline<input name="headline" maxlength="44" value="${h(s.headline)}"></label>
-        <label>Highlight<input name="highlight" value="${h(s.highlight ?? '')}"></label>
-        <label>Eyebrow<input name="eyebrow" maxlength="30" value="${h(s.eyebrow ?? '')}"></label>
-        <label class="wide">Subline<input name="subline" maxlength="90" value="${h(s.subline ?? '')}"></label>
+        <label class="wide">Headline<input name="headline" maxlength="44" value="${h(copy(s.headline))}"></label>
+        <label>Highlight<input name="highlight" value="${h(copy(s.highlight ?? ''))}"></label>
+        <label>Eyebrow<input name="eyebrow" maxlength="30" value="${h(copy(s.eyebrow ?? ''))}"></label>
+        <label class="wide">Subline<input name="subline" maxlength="90" value="${h(copy(s.subline ?? ''))}"></label>
         <label>Background ${sel('background', ['default', 'alt', 'accent'], s.background ?? 'default')}</label>
-        <label>Callouts (comma)<input name="callouts" value="${h((s.callouts ?? []).join(', '))}"></label>
-        <label class="wide">Badges (comma)<input name="badges" value="${h((s.badges ?? []).join(', '))}"></label>
+        <label>Callouts (comma)<input name="callouts" value="${h(listText(s.callouts))}"></label>
+        <label class="wide">Badges (comma)<input name="badges" value="${h(listText(s.badges))}"></label>
         ${s.layout === 'zoom' ? `<label class="wide">Zoom focus x,y,w,h (0–1)<input name="focus" value="${s.focus ? [s.focus.x, s.focus.y, s.focus.w, s.focus.h].join(',') : '0.05,0.3,0.9,0.25'}"></label>` : ''}
       </div>
     </div>`).join('');
@@ -197,9 +222,9 @@ function renderPlan() {
   const fg = plan.featureGraphic;
   $('#fg-form').innerHTML = `
     <label>Layout ${sel('layout', FG_LAYOUTS, fg.layout)}</label>
-    <label>Highlight<input name="highlight" value="${h(fg.highlight ?? '')}"></label>
-    <label class="wide">Tagline<input name="headline" maxlength="44" value="${h(fg.headline)}"></label>
-    <label class="wide">Badges (comma)<input name="badges" value="${h((fg.badges ?? []).join(', '))}"></label>
+    <label>Highlight<input name="highlight" value="${h(copy(fg.highlight ?? ''))}"></label>
+    <label class="wide">Tagline<input name="headline" maxlength="44" value="${h(copy(fg.headline))}"></label>
+    <label class="wide">Badges (comma)<input name="badges" value="${h(listText(fg.badges))}"></label>
     ${[0, 1, 2].map((i) => `<label>Screenshot ${i + 1} ${sel(`fg${i}`, ['', ...shots], fg.screenshots[i] ?? '')}</label>`).join('')}`;
 }
 
@@ -221,6 +246,8 @@ function renderGallery(current) {
   }).join('');
 }
 
+const listText = (value) => copy(value ?? []).join(', ').replace(/(?:,\s*)+$/, '');
+const copyList = (value) => value.trim() ? value.split(',').map((s) => s.trim()) : [];
 const csv = (v) => v.split(',').map((s) => s.trim()).filter(Boolean);
 const setOpt = (obj, k, v) => { if (v === '' || v == null || (Array.isArray(v) && !v.length)) delete obj[k]; else obj[k] = v; };
 
@@ -258,11 +285,11 @@ function collectPlan() {
     s.layout = v('layout');
     setOpt(s, 'role', v('role'));
     s.screenshots = [v('shot0'), v('shot1')].filter(Boolean);
-    s.headline = v('headline');
-    for (const k of ['highlight', 'eyebrow', 'subline']) setOpt(s, k, v(k));
+    putCopy(s, 'headline', v('headline'));
+    for (const k of ['highlight', 'eyebrow', 'subline']) putCopy(s, k, v(k));
     setOpt(s, 'background', v('background') === 'default' ? '' : v('background'));
-    setOpt(s, 'callouts', csv(v('callouts')));
-    setOpt(s, 'badges', csv(v('badges')));
+    putCopy(s, 'callouts', copyList(v('callouts')));
+    putCopy(s, 'badges', copyList(v('badges')));
     if (s.layout === 'zoom') {
       const [x, y, w, hh] = v('focus').split(',').map(Number);
       s.focus = { x, y, w, h: hh };
@@ -272,9 +299,9 @@ function collectPlan() {
   const ff = $('#fg-form');
   const fg = plan.featureGraphic;
   fg.layout = val('layout', ff);
-  fg.headline = val('headline', ff);
-  setOpt(fg, 'highlight', val('highlight', ff));
-  setOpt(fg, 'badges', csv(val('badges', ff)));
+  putCopy(fg, 'headline', val('headline', ff));
+  putCopy(fg, 'highlight', val('highlight', ff));
+  putCopy(fg, 'badges', copyList(val('badges', ff)));
   fg.screenshots = [0, 1, 2].map((i) => val(`fg${i}`, ff)).filter(Boolean);
   return plan;
 }
@@ -296,8 +323,11 @@ async function savePlan() {
 
 // ---------- previews ----------
 function previewCard(e, scale) {
-  const qa = state.project.qa?.slides?.[e.id];
+  const qa = state.project.qa?.slides?.[e.key];
   const [w, hgt] = e.kind === 'feature' ? [1024, 500] : [1080, 1920];
+  const main = $('main');
+  const style = getComputedStyle(main);
+  scale = Math.min(scale, (main.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)) / w);
   const status = !qa ? '<span class="pill">not exported</span>' : qa.errors.length ? `<span class="pill err">${qa.errors.length} error</span>` : qa.warnings.length ? `<span class="pill warn">${qa.warnings.length} warn</span>` : '<span class="pill ok">QA ok</span>';
   return `<div class="preview" data-id="${h(e.id)}" data-kind="${e.kind}">
     <div class="frame" style="width:${w * scale}px;height:${hgt * scale}px"><iframe loading="lazy" src="/files/${encodeURIComponent(state.name)}/build/${encodeURIComponent(e.file)}?t=${state.bust}" style="width:${w}px;height:${hgt}px;transform:scale(${scale})" title="${h(e.id)}"></iframe></div>
@@ -307,7 +337,7 @@ function previewCard(e, scale) {
 }
 
 function renderPreviews() {
-  const deck = state.project.deck ?? [];
+  const deck = (state.project.deck ?? []).filter((e) => e.locale === state.locale);
   const refs = state.project.references;
   $('#ref-strip').hidden = !refs.length;
   $('#ref-strip').innerHTML = refs.length ? `<span class="muted">Reference</span>${refs.map((r) => `<img src="${files('input/reference', r.file)}" alt="">`).join('')}` : '';
@@ -315,12 +345,12 @@ function renderPreviews() {
 }
 
 async function openSlide(id) {
-  const e = state.project.deck.find((x) => x.id === id);
+  const e = state.project.deck.find((x) => x.id === id && x.locale === state.locale);
   const [w, hgt] = e.kind === 'feature' ? [1024, 500] : [1080, 1920];
   const dlg = $('#slide-dialog');
   dlg.dataset.id = id;
   $('#dlg-title').textContent = `${e.index + 1}. ${id}${e.mode === 'custom' ? ' (custom)' : ''}`;
-  $('#dlg-code').value = await api(`/api/projects/${encodeURIComponent(state.name)}/slides/${encodeURIComponent(id)}/html`);
+  $('#dlg-code').value = await api(`/api/projects/${encodeURIComponent(state.name)}/slides/${encodeURIComponent(id)}/html${localeQuery()}`);
   dlg.showModal();
   const box = $('.dlg-preview');
   const scale = Math.min((box.parentElement.clientHeight - 32) / hgt, 560 / w);
@@ -332,21 +362,22 @@ async function openSlide(id) {
 
 // ---------- exports ----------
 function renderExports() {
-  const { exports } = state.project;
-  const fig = (kind, f, w) => `<figure><img src="${files(`export/${kind}`, f)}" style="width:${w}px" alt=""><figcaption><span>${h(f)}</span><a href="${files(`export/${kind}`, f)}" download="${h(f)}">download</a></figcaption></figure>`;
+  const exports = exportsForLocale();
+  const fig = (kind, f, w) => `<figure><img src="${files(exportKind(kind), f)}" style="width:${w}px" alt=""><figcaption><span>${h(f)}</span><a href="${files(exportKind(kind), f)}" download="${h(f)}">download</a></figcaption></figure>`;
   $('#exports').innerHTML = [...exports.feature.map((f) => fig('feature', f, 512)), ...exports.phone.map((f) => fig('phone', f, 240))].join('') || '<div class="panel muted">No PNGs yet — export first.</div>';
   $('#zip-btn').href = `/api/projects/${encodeURIComponent(state.name)}/download.zip`;
 }
 
 function renderStore() {
-  const { app, exports, hasIcon } = state.project;
+  const { app, hasIcon } = state.project;
+  const exports = exportsForLocale();
   const fg = exports.feature[0];
   $('#play').innerHTML = `
-    ${fg ? `<img class="fg" src="${files('export/feature', fg)}" alt="">` : '<div class="fg"></div>'}
+    ${fg ? `<img class="fg" src="${files(exportKind('feature'), fg)}" alt="">` : '<div class="fg"></div>'}
     <div class="head">${hasIcon ? `<img src="/files/${encodeURIComponent(state.name)}/input/icon.png?t=${state.bust}" alt="">` : '<div class="ph"></div>'}
       <div><b>${h(app.name)}</b><small>${h(app.packageName || 'your developer name')}</small></div></div>
     <div class="install">Install</div>
-    <div class="carousel">${exports.phone.map((f) => `<img src="${files('export/phone', f)}" alt="">`).join('') || '<span class="muted">Export to see screenshots</span>'}</div>
+    <div class="carousel">${exports.phone.map((f) => `<img src="${files(exportKind('phone'), f)}" alt="">`).join('') || '<span class="muted">Export to see screenshots</span>'}</div>
     <div class="about"><b>About this app</b>${h(app.shortDescription || 'Add a short description in Inputs.')}</div>`;
 }
 
@@ -415,9 +446,10 @@ async function init() {
   state.meta = await api('/api/meta');
   $('#projects-dir').textContent = `${state.meta.projectsDir.split('/').slice(-2).join('/')}/`;
   $('#projects-dir').title = state.meta.projectsDir;
-  const agentOpts = (first) => [`<option value="${first}">${first === 'heuristic' ? 'Heuristic (no AI)' : 'Template only'}</option>`,
+  const agentOpts = (first) => [`<option value="${first}">${first === '' ? 'Skip translation' : first === 'heuristic' ? 'Heuristic (no AI)' : 'Template only'}</option>`,
     ...state.meta.agents.map((a) => `<option value="${a.id}" ${a.path ? '' : 'disabled'}>${h(a.label)}${a.path ? '' : ' (not installed)'}</option>`)].join('');
   $('#planner').innerHTML = agentOpts('heuristic');
+  $('#translator').innerHTML = agentOpts('');
   $('#builder').innerHTML = agentOpts('template');
   const firstAgent = state.meta.agents.find((a) => a.path);
   if (firstAgent) { $('#planner').value = firstAgent.id; $('#builder').value = firstAgent.id; }
@@ -434,6 +466,13 @@ async function init() {
     if (!to) return;
     try { await api(`/api/projects/${encodeURIComponent(state.name)}/duplicate`, { method: 'POST', body: { to } }); location.hash = to; toast(`Duplicated as ${to}`); } catch (e) { toast(e.message, true); }
   });
+  $('#locale').addEventListener('change', () => {
+    try {
+      if (state.plan) state.plan = collectPlan();
+      state.locale = $('#locale').value;
+      renderPlan(); renderPreviews(); renderExports(); renderStore();
+    } catch (e) { $('#locale').value = state.locale; toast(e.message, true); }
+  });
   $('#save-app').addEventListener('click', () => saveApp().catch((e) => toast(e.message, true)));
   $('#shots').addEventListener('click', async (e) => {
     const kind = e.target.dataset.del;
@@ -447,7 +486,7 @@ async function init() {
     setProject(await api(`/api/projects/${encodeURIComponent(state.name)}/files/reference/${encodeURIComponent(file)}`, { method: 'DELETE' }));
   });
   $('#run-all').addEventListener('click', () => run({
-    steps: ['plan', 'build', 'export'], planner: $('#planner').value, builder: $('#builder').value,
+    steps: ['plan', 'translate', 'build', 'export'], translator: $('#translator').value || undefined, planner: $('#planner').value, builder: $('#builder').value,
     rounds: Number($('#rounds').value), model: $('#model').value, scale: Number($('#scale').value),
   }, `Generate · ${$('#planner').value} → ${$('#builder').value}`));
   $('#plan-agent').addEventListener('click', () => run({ steps: ['plan', 'build'], planner: $('#planner').value, builder: 'template', model: $('#model').value }, `Plan · ${$('#planner').value}`));
@@ -510,14 +549,14 @@ async function init() {
   $('#dlg-save').addEventListener('click', async () => {
     const id = $('#slide-dialog').dataset.id;
     try {
-      setProject(await api(`/api/projects/${encodeURIComponent(state.name)}/slides/${encodeURIComponent(id)}/html`, { method: 'PUT', body: $('#dlg-code').value, headers: { 'Content-Type': 'text/plain' } }));
+      setProject(await api(`/api/projects/${encodeURIComponent(state.name)}/slides/${encodeURIComponent(id)}/html${localeQuery()}`, { method: 'PUT', body: $('#dlg-code').value, headers: { 'Content-Type': 'text/plain' } }));
       $('#dlg-frame').src = $('#dlg-frame').src.replace(/t=\d+/, `t=${Date.now()}`);
       toast('Saved — slide is now custom');
     } catch (e) { toast(e.message, true); }
   });
   $('#dlg-reset').addEventListener('click', async () => {
     const id = $('#slide-dialog').dataset.id;
-    setProject(await api(`/api/projects/${encodeURIComponent(state.name)}/slides/${encodeURIComponent(id)}/reset`, { method: 'POST' }));
+    setProject(await api(`/api/projects/${encodeURIComponent(state.name)}/slides/${encodeURIComponent(id)}/reset${localeQuery()}`, { method: 'POST' }));
     $('#slide-dialog').close();
     toast('Reset to template');
   });
