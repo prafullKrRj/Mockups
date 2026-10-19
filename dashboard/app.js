@@ -9,7 +9,18 @@ const DECOR = ['blobs', 'grid', 'dots', 'glow', 'rings', 'noise'];
 const CATEGORIES = ['finance', 'productivity', 'health', 'fitness', 'ai', 'social', 'food', 'travel', 'education', 'utilities', 'business', 'lifestyle', 'games', 'kids', 'music', 'weather', 'medical', 'general'];
 const COLOR_KEYS = ['bg', 'bg2', 'text', 'muted', 'accent', 'accent2', 'surface', 'surfaceText'];
 
-const state = { meta: null, project: null, name: null, plan: null, job: null, tab: 'inputs', locale: null, bust: Date.now() };
+const state = { meta: null, project: null, name: null, plan: null, job: null, tab: 'inputs', locale: null, bust: Date.now(), appDirty: false, planDirty: false, appRevision: 0, planRevision: 0, saving: 0, opening: 0 };
+
+function updateSaveStatus() {
+  $('#save-status').textContent = state.saving ? 'Saving changes…' : state.appDirty || state.planDirty ? 'Unsaved changes' : 'All changes saved';
+  $('#save-status').classList.toggle('unsaved', state.appDirty || state.planDirty);
+}
+
+function markDirty(kind) {
+  state[`${kind}Dirty`] = true;
+  state[`${kind}Revision`]++;
+  updateSaveStatus();
+}
 
 async function api(path, opts = {}) {
   const res = await fetch(path, {
@@ -70,18 +81,29 @@ function filterProjects() {
 }
 
 async function openProject(name) {
+  if (state.name && name !== state.name && (state.appDirty || state.planDirty) && !confirm('This project has unsaved changes. Discard them and switch projects?')) {
+    location.hash = encodeURIComponent(state.name);
+    return;
+  }
+  const request = ++state.opening;
+  const project = await api(`/api/projects/${encodeURIComponent(name)}`);
+  if (request !== state.opening) return;
+  if (name !== state.name) { state.appDirty = false; state.planDirty = false; }
   state.name = name;
-  setProject(await api(`/api/projects/${encodeURIComponent(name)}`));
+  setProject(project);
   $('#empty').hidden = true;
   $('#project').hidden = false;
   await loadProjects();
 }
 
 function setProject(p) {
+  const appDraft = state.appDirty ? collectApp() : null;
+  const rawDraft = state.planDirty && !$('#plan-json').hidden ? $('#plan-json').value : null;
+  const planDraft = state.planDirty ? rawDraft === null ? collectPlan() : state.plan : null;
   state.project = p;
   if (!locales().includes(state.locale)) state.locale = locales()[0];
   $('#locale').innerHTML = locales().map((locale) => `<option ${locale === state.locale ? 'selected' : ''}>${h(locale)}</option>`).join('');
-  state.plan = p.plan ? structuredClone(p.plan) : null;
+  state.plan = planDraft ?? (p.plan ? structuredClone(p.plan) : null);
   state.bust = Date.now();
   $('#p-title').textContent = p.app.name;
   $('#workspace-name').textContent = p.name;
@@ -89,16 +111,18 @@ function setProject(p) {
   $('#shot-count').textContent = p.screenshots.length;
   const progress = [[p.screenshots.length, `${p.screenshots.length} screenshots`], [p.plan, 'Plan ready'], [p.deck?.length, 'Previews built'], [exportsForLocale().phone.length, 'PNGs exported']];
   $('#project-progress').innerHTML = progress.map(([done, label]) => `<span class="${done ? 'done' : ''}">${done ? '✓' : '○'} ${h(label)}</span>`).join('');
-  renderInputs();
+  renderInputs(appDraft ?? p.app);
   renderPlan();
+  if (rawDraft !== null) $('#plan-json').value = rawDraft;
   renderPreviews();
   renderExports();
   renderStore();
+  updateSaveStatus();
 }
 
 // ---------- inputs ----------
-function renderInputs() {
-  const { app, screenshots, references, hasIcon } = state.project;
+function renderInputs(app = state.project.app) {
+  const { screenshots, references, hasIcon } = state.project;
   const field = (k, label, type = 'text', wide = false) => `<label class="${wide ? 'wide' : ''}">${label}${type === 'textarea'
     ? `<textarea name="${k}">${h(app[k])}</textarea>`
     : `<input name="${k}" type="${type}" ${k === 'shortDescription' ? 'maxlength="80"' : ''} value="${h(app[k])}">`}</label>`;
@@ -175,8 +199,18 @@ function collectApp() {
 }
 
 async function saveApp(quiet = false) {
-  setProject(await api(`/api/projects/${encodeURIComponent(state.name)}/app`, { method: 'PUT', body: collectApp() }));
-  if (!quiet) toast('App info saved');
+  const name = state.name;
+  const revision = state.appRevision;
+  state.saving++;
+  $('#save-app').disabled = true;
+  updateSaveStatus();
+  try {
+    const project = await api(`/api/projects/${encodeURIComponent(name)}/app`, { method: 'PUT', body: collectApp() });
+    if (name !== state.name) return;
+    if (revision === state.appRevision) state.appDirty = false;
+    setProject(project);
+    if (!quiet) toast('App info saved');
+  } finally { state.saving--; $('#save-app').disabled = false; updateSaveStatus(); }
 }
 
 async function uploadFiles(kind, list) {
@@ -336,15 +370,23 @@ async function savePlan() {
   let plan;
   try { plan = collectPlan(); } catch (e) { return toast(`Invalid JSON: ${e.message}`, true); }
   $('#plan-status').textContent = 'Saving…';
+  const name = state.name;
+  const revision = state.planRevision;
+  state.saving++;
+  $('#save-plan').disabled = true;
+  updateSaveStatus();
   try {
-    setProject(await api(`/api/projects/${encodeURIComponent(state.name)}/plan`, { method: 'PUT', body: plan }));
+    const project = await api(`/api/projects/${encodeURIComponent(name)}/plan`, { method: 'PUT', body: plan });
+    if (name !== state.name) return;
+    if (revision === state.planRevision) state.planDirty = false;
+    setProject(project);
     $('#plan-status').textContent = 'Saved and re-rendered. Export to refresh PNGs.';
     toast('Plan saved');
   } catch (e) {
     $('#plan-status').textContent = '';
     const d = e.details;
     toast(d?.errors ? `Invalid plan: ${d.errors[0]}` : e.message, true);
-  }
+  } finally { state.saving--; $('#save-plan').disabled = false; updateSaveStatus(); }
 }
 
 // ---------- previews ----------
@@ -504,6 +546,9 @@ async function init() {
   if (firstAgent) { $('#planner').value = firstAgent.id; $('#builder').value = firstAgent.id; }
 
   bindDrops();
+  $('#tab-inputs').addEventListener('input', (e) => { if (e.target.type !== 'file') markDirty('app'); });
+  $('#tab-plan').addEventListener('input', () => markDirty('plan'));
+  window.addEventListener('beforeunload', (e) => { if (state.appDirty || state.planDirty) { e.preventDefault(); e.returnValue = ''; } });
   let previewWidth = 0;
   new ResizeObserver(([entry]) => {
     if (entry.contentRect.width === previewWidth) return;
@@ -566,6 +611,7 @@ async function init() {
     if (!b) return;
     state.plan = collectPlan();
     state.plan.theme = { preset: b.dataset.preset, ...(state.plan.theme.referenceNotes ? { referenceNotes: state.plan.theme.referenceNotes } : {}) };
+    markDirty('plan');
     renderPlan();
     savePlan();
   });
@@ -582,6 +628,7 @@ async function init() {
     const n = state.plan.slides.length + 1;
     if (n > 8) return toast('Google Play allows at most 8 phone screenshots', true);
     state.plan.slides.push({ id: `s${n}-new`, layout: 'device-bottom', screenshots: [state.project.screenshots[0].file], headline: 'New headline' });
+    markDirty('plan');
     renderPlan();
   });
   $('#slides-form').addEventListener('click', (e) => {
@@ -596,6 +643,7 @@ async function init() {
         if (j < 0 || j >= state.plan.slides.length) return;
         [state.plan.slides[i], state.plan.slides[j]] = [state.plan.slides[j], state.plan.slides[i]];
       }
+      markDirty('plan');
       renderPlan();
     }
   });

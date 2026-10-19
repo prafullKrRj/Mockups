@@ -27,6 +27,7 @@ kbd { font: inherit; font-size: 11px; }
 .workspace-divider { margin: 0 12px; color: #a0afa3; }
 .local-badge { color: var(--accent); white-space: nowrap; }
 .project-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+#save-status.unsaved { color: var(--warn); }
 .generation-settings { border: 1px solid var(--line); border-radius: 9px; background: #edf1e9; padding: 12px 16px; margin-bottom: 20px; }
 .generation-settings summary { cursor: pointer; font-size: 13px; font-weight: 600; }
 .generation-settings summary span { margin-left: 12px; font-size: 12px; color: var(--muted); font-weight: 400; }
@@ -214,4 +215,11 @@ input[type=color] { padding: 2px; width: 44px; height: 34px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+}
+@media (max-width: 480px) {
+  .shot { grid-template-columns: 48px minmax(0, 1fr); gap: 10px; }
+  .shot img { width: 48px; }
+  .shot .fields { grid-column: 1 / -1; grid-row: 2; grid-template-columns: minmax(0, 1fr) 60px; }
+  .shot > button { grid-row: 1; grid-column: 2; justify-self: end; }
+  .shot .name { overflow-wrap: anywhere; }
 }
