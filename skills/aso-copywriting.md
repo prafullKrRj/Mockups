@@ -1,6 +1,5 @@
 # ASO copywriting for screenshot headlines
 
-Adapted from the copy formulas in [ParthJadhav/app-store-screenshots](https://github.com/ParthJadhav/app-store-screenshots) (MIT).
 
 **Core principle: screenshots are advertisements, not documentation.** Each slide sells one idea — a feeling, an outcome,
 or a killed pain point. If the headline just names the screen ("Settings screen"), rewrite it.
