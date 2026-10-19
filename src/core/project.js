@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
+import { projectLocales } from './locales.js';
 import { PROJECTS_DIR, IMAGE_EXT, projectPaths } from './paths.js';
 
 export const DEFAULT_APP = {
@@ -50,13 +51,14 @@ export async function listProjects() {
     if (!(await exists(p.app))) continue;
     const app = await readJson(p.app, {});
     const shots = await listImages(p.screenshots);
-    const exported = await listImages(path.join(p.export, 'phone'));
+    const exported = (await Promise.all(projectLocales(app).map((locale) => listImages(path.join(p.export, ...(app.locales ? [locale] : []), 'phone'))))).flat();
     out.push({ name: e.name, appName: app.name, screenshots: shots.length, exported: exported.length });
   }
   return out.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function createProject(name, app = {}) {
+  projectLocales(app);
   const p = projectPaths(name);
   if (await exists(p.app)) throw Object.assign(new Error(`Project "${name}" already exists`), { status: 409 });
   await fs.mkdir(p.screenshots, { recursive: true });
@@ -90,6 +92,11 @@ export async function loadProject(name) {
   const screenshots = await imageInfo(p.screenshots);
   // Screens added to the folder without app.json entries still get described (empty) so the UI can show them.
   for (const s of screenshots) app.screens[s.file] ??= { title: '', description: '', priority: 0 };
+  const locales = projectLocales(app);
+  const exportsByLocale = Object.fromEntries(await Promise.all(locales.map(async (locale) => [locale, {
+    phone: await listImages(path.join(p.export, ...(app.locales ? [locale] : []), 'phone')),
+    feature: await listImages(path.join(p.export, ...(app.locales ? [locale] : []), 'feature')),
+  }])));
   return {
     name,
     paths: p,
@@ -99,15 +106,14 @@ export async function loadProject(name) {
     references: await imageInfo(p.reference),
     hasIcon: await exists(p.icon),
     qa: await readJson(path.join(p.runs, 'qa.json'), null),
-    exports: {
-      phone: await listImages(path.join(p.export, 'phone')),
-      feature: await listImages(path.join(p.export, 'feature')),
-    },
+    exports: exportsByLocale[locales[0]],
+    exportsByLocale,
   };
 }
 
 export async function saveApp(name, app) {
   const p = projectPaths(name);
+  projectLocales(app);
   await writeJson(p.app, { ...DEFAULT_APP, ...app });
 }
 

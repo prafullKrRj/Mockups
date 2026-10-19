@@ -3,6 +3,8 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
 import sharp from 'sharp';
+import { validatePlan } from './plan.js';
+import { projectLocales } from './locales.js';
 import { deckEntries } from './build.js';
 import { writeJson } from './project.js';
 
@@ -63,16 +65,26 @@ function inspectPage({ kind, expected }) {
  */
 export async function exportProject(project, { scale = 1, only = null, log = () => {} } = {}) {
   const { plan, paths } = project;
-  const entries = deckEntries(plan).filter((e) => !only || only.includes(e.id));
+  const validation = validatePlan(plan, project);
+  if (!validation.ok) throw Object.assign(new Error(`Invalid plan: ${validation.errors.join('; ')}`), { status: 422 });
+  const entries = deckEntries(plan, project.app).filter((e) => !only || only.includes(e.key) || only.includes(e.id));
   const browser = await chromium.launch();
   const qa = { generatedAt: new Date().toISOString(), slides: {} };
   const results = [];
   try {
-    await fs.mkdir(path.join(paths.export, 'phone'), { recursive: true });
-    await fs.mkdir(path.join(paths.export, 'feature'), { recursive: true });
+    await fs.mkdir(paths.export, { recursive: true });
     if (!only) {
-      for (const sub of ['phone', 'feature']) {
-        for (const f of await fs.readdir(path.join(paths.export, sub))) await fs.rm(path.join(paths.export, sub, f));
+      const active = new Set(project.app.locales ?? ['phone', 'feature']);
+      for (const entry of await fs.readdir(paths.export, { withFileTypes: true })) {
+        const generated = ['phone', 'feature'].includes(entry.name) || /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$/.test(entry.name);
+        if (entry.isDirectory() && generated && !active.has(entry.name)) await fs.rm(path.join(paths.export, entry.name), { recursive: true });
+      }
+    }
+    for (const locale of projectLocales(project.app)) {
+      for (const kind of ['phone', 'feature']) {
+        const dir = path.join(paths.export, ...(project.app.locales ? [locale] : []), kind);
+        await fs.mkdir(dir, { recursive: true });
+        if (!only) for (const f of await fs.readdir(dir)) await fs.rm(path.join(dir, f));
       }
     }
     for (const e of entries) {
@@ -97,7 +109,7 @@ export async function exportProject(project, { scale = 1, only = null, log = () 
       await page.close();
       const order = String(e.index + 1).padStart(2, '0');
       const name = e.kind === 'feature' ? 'feature-graphic.png' : `${order}-${e.id}.png`;
-      const out = path.join(paths.export, e.kind, name);
+      const out = path.join(paths.export, ...(project.app.locales ? [e.locale] : []), e.kind, name);
       let buf = await sharp(raw).flatten({ background: '#ffffff' }).removeAlpha().png({ compressionLevel: 9 }).toBuffer();
       if (buf.length > MAX_BYTES) {
         buf = await sharp(raw).flatten({ background: '#ffffff' }).jpeg({ quality: 92 }).toBuffer();
@@ -105,9 +117,9 @@ export async function exportProject(project, { scale = 1, only = null, log = () 
       }
       const finalOut = buf[0] === 0xff ? out.replace(/\.png$/, '.jpg') : out;
       await fs.writeFile(finalOut, buf);
-      qa.slides[e.id] = report;
-      results.push({ id: e.id, kind: e.kind, file: path.relative(paths.dir, finalOut), ...report });
-      log(`${report.errors.length ? '✗' : '✓'} ${e.id}${report.errors.length ? ` — ${report.errors.length} error(s)` : ''}${report.warnings.length ? ` · ${report.warnings.length} warning(s)` : ''}`);
+      qa.slides[e.key] = report;
+      results.push({ id: e.id, locale: e.locale, key: e.key, kind: e.kind, file: path.relative(paths.dir, finalOut), ...report });
+      log(`${report.errors.length ? '✗' : '✓'} ${e.key}${report.errors.length ? ` — ${report.errors.length} error(s)` : ''}${report.warnings.length ? ` · ${report.warnings.length} warning(s)` : ''}`);
     }
   } finally {
     await browser.close();
@@ -117,18 +129,21 @@ export async function exportProject(project, { scale = 1, only = null, log = () 
     qa.slides = { ...prev.slides, ...qa.slides };
   }
   await writeJson(path.join(paths.runs, 'qa.json'), qa);
-  await contactSheet(paths);
+  for (const locale of projectLocales(project.app)) {
+    await contactSheet(paths, project.app.locales ? locale : null);
+  }
+  if (project.app.locales) await fs.copyFile(path.join(paths.runs, `contact-sheet-${project.app.locales[0]}.png`), path.join(paths.runs, 'contact-sheet.png'));
   return { results, qa };
 }
 
 /** One image of the whole phone deck — cheaper for review agents than N full-size PNGs. */
-export async function contactSheet(paths) {
-  const dir = path.join(paths.export, 'phone');
+export async function contactSheet(paths, locale = null) {
+  const dir = path.join(paths.export, ...(locale ? [locale] : []), 'phone');
   const files = (await fs.readdir(dir)).filter((f) => /\.(png|jpg)$/.test(f)).sort();
   if (!files.length) return null;
   const [w, h, gap] = [360, 640, 24];
   const tiles = await Promise.all(files.map((f) => sharp(path.join(dir, f)).resize(w, h).toBuffer()));
-  const out = path.join(paths.runs, 'contact-sheet.png');
+  const out = path.join(paths.runs, locale ? `contact-sheet-${locale}.png` : 'contact-sheet.png');
   await sharp({ create: { width: files.length * (w + gap) + gap, height: h + gap * 2, channels: 3, background: '#1b1c20' } })
     .composite(tiles.map((input, i) => ({ input, left: gap + i * (w + gap), top: gap })))
     .png().toFile(out);

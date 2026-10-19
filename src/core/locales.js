@@ -34,7 +34,7 @@ export function localizePlan(plan, locale) {
   const text = (value) => typeof value === 'string' ? value : value[locale] ?? '';
   for (const slide of [...result.slides, result.featureGraphic]) {
     for (const key of COPY_KEYS) {
-      if (slide[key] != null) slide[key] = Array.isArray(slide[key]) ? slide[key].map(text) : text(slide[key]);
+      if (slide[key] != null) slide[key] = Array.isArray(slide[key]) ? slide[key].map(text).filter(Boolean) : text(slide[key]);
     }
   }
   return result;

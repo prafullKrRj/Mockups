@@ -1,3 +1,4 @@
+import { localeTypography } from '../core/locales.js';
 import { resolveTheme, contrast } from './themes.js';
 
 const W = 1080;
@@ -212,15 +213,16 @@ const FIT_SCRIPT = `<script>
 })();
 </script>`;
 
-function doc({ theme, c, canvas, title, body }) {
+function doc({ theme, c, canvas, title, body, locale }) {
+  const { dir, font } = localeTypography(locale);
   return `<!doctype html>
-<html lang="en" data-canvas="${canvas.w}x${canvas.h}">
+<html lang="${esc(locale)}" dir="${dir}" data-canvas="${canvas.w}x${canvas.h}">
 <head>
 <meta charset="utf-8">
 <title>${esc(title)}</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 ${fontLinks(theme)}
-<style>:root{--cw:${canvas.w}px;--ch:${canvas.h}px}${baseCss(theme, c)}</style>
+<style>:root{--cw:${canvas.w}px;--ch:${canvas.h}px}${baseCss(theme, c)}${font ? "h1{line-height:1.3;letter-spacing:normal}.text{text-align:start}" : ""}</style>
 </head>
 <body>
 ${body}
@@ -249,8 +251,10 @@ function badgesHtml(badges = []) {
 }
 
 /** Render one phone slide to a complete HTML document. */
-export function renderSlide({ plan, slide, index, shots, app }) {
+export function renderSlide({ plan, slide, index, shots, app, locale = 'en-US' }) {
   const theme = resolveTheme(plan.theme);
+  const { font } = localeTypography(locale);
+  if (font) theme.fonts = { ...theme.fonts, headline: font, body: font };
   const c = slideColors(theme, slide.background);
   const canvas = { w: W, h: H };
   const dims = (f) => shots[f] ?? { width: 1080, height: 2400 };
@@ -340,12 +344,14 @@ export function renderSlide({ plan, slide, index, shots, app }) {
   }
 
   const body = `<div class="layer">${decorHtml(theme, c, index, canvas, focal)}</div>\n${parts.join('\n')}`;
-  return doc({ theme, c, canvas, title: `${plan.app.name} — ${slide.id}`, body });
+  return doc({ theme, c, canvas, locale, title: `${plan.app.name} — ${slide.id}`, body });
 }
 
 /** Render the 1024×500 Play Store feature graphic. */
-export function renderFeatureGraphic({ plan, shots, app }) {
+export function renderFeatureGraphic({ plan, shots, app, locale = 'en-US' }) {
   const theme = resolveTheme(plan.theme);
+  const { font } = localeTypography(locale);
+  if (font) theme.fonts = { ...theme.fonts, headline: font, body: font };
   const c = slideColors(theme, 'default');
   const fg = plan.featureGraphic;
   const canvas = { w: 1024, h: 500 };
@@ -381,5 +387,5 @@ export function renderFeatureGraphic({ plan, shots, app }) {
   }
 
   const body = `<div class="layer">${decorHtml(theme, c, 99, canvas, focal)}</div>\n${parts.join('\n')}`;
-  return doc({ theme, c, canvas, title: `${plan.app.name} — feature graphic`, body });
+  return doc({ theme, c, canvas, locale, title: `${plan.app.name} — feature graphic`, body });
 }
