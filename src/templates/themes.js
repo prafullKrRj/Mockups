@@ -16,7 +16,7 @@ export const PRESETS = {
     device: { frame: 'titanium', shadow: 'hard' },
   },
   'bold-gradient': {
-    colors: { bg: '#3A1CFF', bg2: '#C21CFF', text: '#FFFFFF', muted: '#E9E2FF', accent: '#FFD84D', accent2: '#FF7AD9', surface: '#FFFFFF', surfaceText: '#1B1340' },
+    colors: { bg: '#3A1CFF', bg2: '#A314E6', text: '#FFFFFF', muted: '#E9E2FF', accent: '#FFD84D', accent2: '#FF7AD9', surface: '#FFFFFF', surfaceText: '#1B1340' },
     background: { type: 'linear', angle: 155 },
     fonts: { headline: 'Poppins', body: 'Poppins', headlineWeight: 800 },
     headlineCase: 'none', highlightStyle: 'color', decor: ['rings', 'noise'],

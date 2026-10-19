@@ -130,10 +130,12 @@ function fontLinks(theme) {
 
 function baseCss(theme, c) {
   const hlStyle = theme.highlightStyle === 'color' && contrast(c.accent, c.bg) < 3 ? 'underline' : theme.highlightStyle;
+  // A saturated marker behind dark text is unreadable; fall back to a translucent tint of the accent.
+  const markerFill = contrast(c.text, c.accent) >= 4.5 ? rgba(c.accent, 0.9) : rgba(c.accent, 0.28);
   const hl = {
     color: `color:${c.accent};`,
     gradient: `background:linear-gradient(95deg, ${c.accent}, ${c.accent2});-webkit-background-clip:text;background-clip:text;color:transparent;padding-right:.04em;`,
-    marker: `background:linear-gradient(transparent 56%, ${rgba(c.accent, 0.9)} 56%, ${rgba(c.accent, 0.9)} 94%, transparent 94%);padding:0 .06em;-webkit-box-decoration-break:clone;box-decoration-break:clone;`,
+    marker: `background:linear-gradient(transparent 56%, ${markerFill} 56%, ${markerFill} 94%, transparent 94%);padding:0 .06em;-webkit-box-decoration-break:clone;box-decoration-break:clone;`,
     underline: `text-decoration:underline;text-decoration-color:${c.accent};text-decoration-thickness:.09em;text-underline-offset:.12em;`,
     none: '',
   }[hlStyle] ?? '';
@@ -161,7 +163,8 @@ body{position:relative;background:${backgroundCss(theme, c)};color:${c.text};fon
 h1{flex:none;padding-block:.05em;font-family:'${theme.fonts.headline}',system-ui,sans-serif;font-weight:${theme.fonts.headlineWeight};font-size:var(--hs,112px);line-height:1.04;letter-spacing:-.025em;${theme.headlineCase === 'upper' ? 'text-transform:uppercase;letter-spacing:-.01em;line-height:.98;' : ''}overflow:hidden;overflow-wrap:break-word;text-wrap:balance}
 h1 .hl{font-style:normal;${hl}}
 .sub{flex:none;font-size:42px;line-height:1.32;font-weight:500;color:${c.muted};max-width:900px;overflow:hidden;text-wrap:pretty}
-.badges{display:flex;gap:16px;flex-wrap:wrap;justify-content:inherit}
+.badges{display:flex;gap:16px;flex-wrap:wrap;justify-content:flex-start}
+.text.center .badges{justify-content:center}
 .badge{font-size:30px;font-weight:600;padding:14px 28px;border-radius:999px;background:${rgba(c.surface, 0.9)};color:${c.surfaceText};box-shadow:0 10px 30px -12px ${rgba('#000000', 0.25)}}
 .icon{border-radius:22%;box-shadow:0 18px 40px -16px ${rgba('#000000', 0.45)};object-fit:cover}
 .icon.letter{display:flex;align-items:center;justify-content:center;font-family:'${theme.fonts.headline}',sans-serif;font-weight:800}
@@ -188,7 +191,9 @@ const FIT_SCRIPT = `<script>
   for (const el of document.querySelectorAll('[data-fit]')) {
     let s = parseFloat(getComputedStyle(el).fontSize);
     const min = parseFloat(el.dataset.min || 40);
-    while ((el.scrollHeight > el.clientHeight + s * 0.12 || el.scrollWidth > el.clientWidth + 1) && s > min) {
+    // Tall fonts with tight line-height overflow their line box by design; only real wrapping counts.
+    const slack = () => s * (0.12 + Math.max(0, 1.2 - parseFloat(getComputedStyle(el).lineHeight) / s));
+    while ((el.scrollHeight > el.clientHeight + slack() || el.scrollWidth > el.clientWidth + 1) && s > min) {
       s -= 2; el.style.fontSize = s + 'px';
     }
   }
@@ -284,7 +289,8 @@ export function renderSlide({ plan, slide, index, shots, app }) {
       parts.push(textBlock({ slide, x: M, y: 150, w: textW, h: 500 }));
       parts.push(deviceHtml({ file: s1, dims: dims(s1), w, x: M, y: 720, theme }));
       slide.callouts.slice(0, 3).forEach((t, i) => {
-        parts.push(`<div class="card" style="left:${500 + (i % 2) * 40}px;top:${900 + i * 270}px;max-width:${W - 500 - M}px"><i></i><span>${esc(t)}</span></div>`);
+        const left = 500 + (i % 2) * 40;
+        parts.push(`<div class="card" style="left:${left}px;top:${900 + i * 270}px;max-width:${W - left - M}px"><i></i><span>${esc(t)}</span></div>`);
       });
       break;
     }

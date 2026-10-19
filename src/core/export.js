@@ -41,7 +41,8 @@ function inspectPage({ kind, expected }) {
     if (r.left < margin.x - 1 || r.top < margin.y - 1 || r.right > cw - margin.x + 1 || r.bottom > ch - margin.y + 1) {
       errors.push(`text "${label}" leaves the safe area (${r.left | 0},${r.top | 0} → ${r.right | 0},${r.bottom | 0})`);
     }
-    if (el.scrollHeight > el.clientHeight + Math.max(2, fs * 0.15) && cs.overflow !== 'visible') errors.push(`text "${label}" is clipped (overflow)`);
+    const slack = fs * (0.15 + Math.max(0, 1.2 - (parseFloat(cs.lineHeight) || fs * 1.2) / fs));
+    if (el.scrollHeight > el.clientHeight + Math.max(2, slack) && cs.overflow !== 'visible') errors.push(`text "${label}" is clipped (overflow)`);
   }
   if (headline) {
     const hr = headline.getBoundingClientRect();
@@ -116,5 +117,20 @@ export async function exportProject(project, { scale = 1, only = null, log = () 
     qa.slides = { ...prev.slides, ...qa.slides };
   }
   await writeJson(path.join(paths.runs, 'qa.json'), qa);
+  await contactSheet(paths);
   return { results, qa };
+}
+
+/** One image of the whole phone deck — cheaper for review agents than N full-size PNGs. */
+export async function contactSheet(paths) {
+  const dir = path.join(paths.export, 'phone');
+  const files = (await fs.readdir(dir)).filter((f) => /\.(png|jpg)$/.test(f)).sort();
+  if (!files.length) return null;
+  const [w, h, gap] = [360, 640, 24];
+  const tiles = await Promise.all(files.map((f) => sharp(path.join(dir, f)).resize(w, h).toBuffer()));
+  const out = path.join(paths.runs, 'contact-sheet.png');
+  await sharp({ create: { width: files.length * (w + gap) + gap, height: h + gap * 2, channels: 3, background: '#1b1c20' } })
+    .composite(tiles.map((input, i) => ({ input, left: gap + i * (w + gap), top: gap })))
+    .png().toFile(out);
+  return out;
 }

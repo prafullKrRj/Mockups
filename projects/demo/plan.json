@@ -1,68 +1,120 @@
 {
   "version": 1,
-  "generatedBy": "heuristic",
+  "generatedBy": "claude",
   "app": {
     "name": "Paisa Calm",
-    "tagline": "Budgets, bills and spending in one calm place"
+    "tagline": "Money, finally calm"
   },
   "theme": {
     "preset": "swiss-paper",
     "colors": {
+      "bg": "#F4F2FF",
+      "bg2": "#FFF1E8",
+      "text": "#14122B",
+      "muted": "#5A5873",
       "accent": "#4C3BFF",
-      "accent2": "#FF8A4C"
-    }
+      "accent2": "#FF8A4C",
+      "surface": "#FFFFFF",
+      "surfaceText": "#14122B"
+    },
+    "background": {
+      "type": "linear",
+      "angle": 160
+    },
+    "fonts": {
+      "headline": "Inter Tight",
+      "body": "Inter",
+      "headlineWeight": 800
+    },
+    "highlightStyle": "marker",
+    "decor": [
+      "grid",
+      "glow"
+    ],
+    "device": {
+      "frame": "dark",
+      "shadow": "soft"
+    },
+    "referenceNotes": "No references. Finance \u2192 swiss-paper. App UI is light (#F6F7FB) with indigo #4C3BFF primary cards and a coral avatar, so background is a soft lavender-to-peach gradient (brand colours, tinted) to separate the light screens from the canvas; dark device frame adds edge contrast. Indigo is the single dominant accent, coral only as secondary."
   },
   "slides": [
     {
-      "id": "s1-home",
+      "id": "hero",
       "role": "hero",
       "layout": "hero",
       "screenshots": [
         "01-home.png"
       ],
-      "eyebrow": "FINANCE",
-      "headline": "Home",
-      "subline": "Total balance across accounts and the latest transactions"
+      "eyebrow": "PERSONAL FINANCE",
+      "headline": "All your money, one calm place",
+      "highlight": "calm",
+      "subline": "Every account and every rupee, at a glance"
     },
     {
-      "id": "s2-budgets",
-      "role": "feature",
+      "id": "budgets",
+      "role": "differentiator",
       "layout": "device-bottom",
       "screenshots": [
         "02-budgets.png"
       ],
-      "headline": "Budgets",
-      "subline": "Monthly budget per category with progress bars"
+      "eyebrow": "BUDGETS",
+      "headline": "Budgets without spreadsheets",
+      "highlight": "without spreadsheets",
+      "subline": "Set a monthly limit per category and watch it fill"
     },
     {
-      "id": "s3-insights",
-      "role": "feature",
-      "layout": "device-top",
-      "screenshots": [
-        "03-insights.png"
-      ],
-      "headline": "Insights",
-      "subline": "Weekly spending chart and top categories"
-    },
-    {
-      "id": "s4-scan",
+      "id": "scan",
       "role": "feature",
       "layout": "tilted",
       "screenshots": [
         "04-scan.png"
       ],
-      "headline": "Receipt scan",
-      "subline": "Point the camera at a paper receipt to add an expense"
+      "eyebrow": "RECEIPT SCAN",
+      "headline": "Snap a receipt, skip typing",
+      "highlight": "skip typing",
+      "subline": "Point your camera at a paper bill to add the expense"
     },
     {
-      "id": "s5-bills",
-      "role": "closer",
-      "layout": "closer",
+      "id": "insights",
+      "role": "feature",
+      "layout": "zoom",
+      "screenshots": [
+        "03-insights.png"
+      ],
+      "eyebrow": "WEEKLY INSIGHTS",
+      "headline": "See where your week went",
+      "highlight": "week",
+      "subline": "A simple chart of daily spend and your top categories",
+      "focus": {
+        "x": 0.04,
+        "y": 0.09,
+        "w": 0.92,
+        "h": 0.38
+      }
+    },
+    {
+      "id": "bills",
+      "role": "feature",
+      "layout": "device-top",
       "screenshots": [
         "05-bills.png"
       ],
-      "headline": "Bills",
-      "subline": "Upcoming bills with due dates and reminders",
+      "eyebrow": "BILL REMINDERS",
+      "headline": "Never miss a bill again",
+      "highlight": "Never miss",
+      "subline": "Gentle reminders before rent, phone and electricity are due"
+    },
+    {
+      "id": "closer",
+      "role": "closer",
+      "layout": "closer",
+      "screenshots": [
+        "01-home.png"
+      ],
+      "eyebrow": "PRIVATE BY DESIGN",
+      "headline": "Your money stays on your phone",
+      "highlight": "on your phone",
+      "subline": "Everything is stored on your device, nowhere else",
       "badges": [
         "Works offline",
         "No ads",
@@ -71,12 +123,16 @@
     }
   ],
   "featureGraphic": {
-    "layout": "fg-fan",
-    "headline": "Budgets, bills and spending in one calm",
+    "layout": "fg-split",
+    "headline": "Money, finally calm",
+    "highlight": "calm",
+    "badges": [
+      "Works offline",
+      "No ads"
+    ],
     "screenshots": [
       "01-home.png",
-      "02-budgets.png",
-      "03-insights.png"
+      "02-budgets.png"
     ]
   }
 }
