@@ -7,6 +7,7 @@ import { buildProject, deckEntries, setEntryMode } from './build.js';
 import { exportProject } from './export.js';
 import { translateProject } from './translate.js';
 import { runAgent } from './agents.js';
+import { PRESETS, selectedTheme } from '../templates/themes.js';
 
 const skill = (f) => fs.readFile(path.join(SKILLS_DIR, f), 'utf8');
 
@@ -38,6 +39,12 @@ ${schema}
 </schema>
 
 ${projectBrief(project)}
+## Theme selection
+${project.app.themeSelection?.mode && project.app.themeSelection.mode !== 'auto'
+    ? `User locked this theme. Use it exactly: ${JSON.stringify(selectedTheme(project.app))}`
+    : 'Choose a cohesive theme from app genre, description, audience, tone, screenshots and themeSelection.brief. Use reference images when supplied. Explain your choice in theme.referenceNotes.'}
+Available preset tokens (you may override tokens when selection is automatic):
+${JSON.stringify(PRESETS)}
 ${palette.length ? `\n## Measured reference palette (.runs/reference-palette.json)\n\`\`\`json\n${JSON.stringify(palette, null, 2)}\n\`\`\`\n` : ''}
 ${previousErrors ? `\n## Your previous plan.json was REJECTED by the validator. Fix every error:\n${previousErrors.map((e) => `- ${e}`).join('\n')}\n` : ''}
 Now look at every image listed, then write \`plan.json\`. Do not create or modify any other file. When done, reply with one line: PLAN WRITTEN.`;
@@ -92,7 +99,8 @@ export async function runPipeline(name, options = {}) {
   await fs.mkdir(paths.runs, { recursive: true });
   if (!project.screenshots.length) throw Object.assign(new Error(`No screenshots in ${paths.screenshots}`), { status: 422 });
 
-  if (steps.includes('plan')) {
+  if (steps.includes('plan') || steps.includes('theme')) {
+    const previousPlan = project.plan;
     stage(`plan (${planner})`);
     const palette = await referencePalette(project);
     if (palette.length) await writeJson(path.join(paths.runs, 'reference-palette.json'), palette);
@@ -111,6 +119,7 @@ export async function runPipeline(name, options = {}) {
           log(`attempt ${attempt}: ${previousErrors[0]}`, 'warn');
           continue;
         }
+        candidate.theme = selectedTheme(project.app, candidate.theme);
         const v = validatePlan(candidate, project);
         if (v.ok) {
           plan = { ...candidate, generatedBy: planner };
@@ -123,6 +132,7 @@ export async function runPipeline(name, options = {}) {
       if (!plan) log('planner agent failed guardrails 3 times — falling back to heuristic plan', 'error');
     }
     plan ??= heuristicPlan(project);
+    if (steps.includes('theme') && previousPlan) plan = { ...previousPlan, theme: plan.theme };
     await writeJson(paths.plan, plan);
     log(`plan: ${plan.slides.length} slides, theme ${plan.theme.preset}, by ${plan.generatedBy}`);
     project = await loadProject(name);
@@ -163,6 +173,10 @@ export async function runPipeline(name, options = {}) {
 
       // Guardrail 1: the plan must still validate, else roll it back.
       project = await loadProject(name).catch(async (e) => { log(`builder broke plan.json (${e.message}) — rolled back`, 'error'); await writeJson(paths.plan, planBefore); return loadProject(name); });
+      if (project.plan) {
+        project.plan.theme = selectedTheme(project.app, project.plan.theme);
+        await writeJson(paths.plan, project.plan);
+      }
       const v = project.plan ? validatePlan(project.plan, project) : { ok: false, errors: ['plan.json missing'] };
       if (!v.ok) {
         log(`builder plan rejected — rolled back:\n  - ${v.errors.join('\n  - ')}`, 'error');

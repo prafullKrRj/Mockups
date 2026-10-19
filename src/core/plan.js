@@ -4,7 +4,7 @@ import Ajv from 'ajv';
 import sharp from 'sharp';
 import { projectLocales, copyFields, localizePlan } from './locales.js';
 import { SCHEMAS_DIR } from './paths.js';
-import { PRESETS, presetForCategory, resolveTheme, contrast } from '../templates/themes.js';
+import { PRESETS, presetForCategory, resolveTheme, contrast, selectedTheme } from '../templates/themes.js';
 
 const schema = JSON.parse(await fs.readFile(path.join(SCHEMAS_DIR, 'plan.schema.json'), 'utf8'));
 const validateSchema = new Ajv({ allErrors: true, strict: false }).compile(schema);
@@ -152,7 +152,7 @@ export function heuristicPlan(project) {
     version: 1,
     generatedBy: 'heuristic',
     app: { name: app.name.slice(0, 50), tagline: clip(app.shortDescription, 120) },
-    theme,
+    theme: selectedTheme(app, theme),
     slides,
     featureGraphic: {
       layout: shots.length >= 3 ? 'fg-fan' : 'fg-split',

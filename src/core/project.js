@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
+import { validateThemeSelection } from '../templates/themes.js';
 import { projectLocales } from './locales.js';
 import { PROJECTS_DIR, IMAGE_EXT, projectPaths } from './paths.js';
 
@@ -58,6 +59,7 @@ export async function listProjects() {
 }
 
 export async function createProject(name, app = {}) {
+  validateThemeSelection(app.themeSelection);
   projectLocales(app);
   const p = projectPaths(name);
   if (await exists(p.app)) throw Object.assign(new Error(`Project "${name}" already exists`), { status: 409 });
@@ -112,6 +114,7 @@ export async function loadProject(name) {
 }
 
 export async function saveApp(name, app) {
+  validateThemeSelection(app.themeSelection);
   const p = projectPaths(name);
   projectLocales(app);
   await writeJson(p.app, { ...DEFAULT_APP, ...app });

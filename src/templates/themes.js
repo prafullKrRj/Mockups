@@ -1,3 +1,5 @@
+import { CorePalette, Scheme, argbFromHex, hexFromArgb } from '@material/material-color-utilities';
+
 // Preset themes. A plan's `theme` is deep-merged over its preset, so presets must define every token.
 
 export const PRESETS = {
@@ -108,6 +110,63 @@ export const PRESETS = {
     device: { frame: 'dark', shadow: 'soft' },
   },
 };
+
+export function validateThemeSelection(selection) {
+  if (selection === undefined) return;
+  const fail = (message) => { throw Object.assign(new Error(`themeSelection: ${message}`), { status: 422 }); };
+  if (!selection || typeof selection !== 'object' || Array.isArray(selection)) fail('must be an object');
+  if (!['auto', 'preset', 'material'].includes(selection.mode)) fail('mode must be auto, preset or material');
+  if (selection.brief !== undefined && (typeof selection.brief !== 'string' || selection.brief.length > 2000)) fail('brief must be text up to 2000 characters');
+  if (selection.mode === 'preset' && !Object.hasOwn(PRESETS, selection.preset)) fail('unknown preset');
+  if (selection.mode === 'material') {
+    for (const key of ['primary', 'secondary', 'tertiary']) {
+      if ((key === 'primary' || selection[key] !== undefined) && !/^#[0-9a-f]{6}$/i.test(selection[key])) fail(`${key} must be a six-digit hex color`);
+    }
+    if (!['light', 'dark'].includes(selection.appearance)) fail('appearance must be light or dark');
+  }
+}
+
+/** Material tonal roles keep arbitrary input colors readable in either appearance. */
+export function materialTheme(selection) {
+  validateThemeSelection({ ...selection, mode: 'material' });
+  const palette = CorePalette.fromColors(Object.fromEntries(['primary', 'secondary', 'tertiary']
+    .filter((key) => selection[key]).map((key) => [key, argbFromHex(selection[key])])));
+  const dark = selection.appearance === 'dark';
+  const scheme = dark ? Scheme.darkFromCorePalette(palette) : Scheme.lightFromCorePalette(palette);
+  const hex = (value) => hexFromArgb(value).toUpperCase();
+  return {
+    preset: 'mono-minimal',
+    colors: {
+      bg: hex(scheme.background), bg2: hex(scheme.surfaceVariant), text: hex(scheme.onBackground),
+      muted: hex(scheme.onSurfaceVariant), accent: hex(scheme.primary), accent2: hex(scheme.tertiary),
+      surface: hex(scheme.secondaryContainer), surfaceText: hex(scheme.onSecondaryContainer),
+    },
+    background: { type: 'soft', angle: 170 },
+    highlightStyle: 'color', eyebrowStyle: 'quiet', decor: ['none'],
+    device: { frame: dark ? 'titanium' : 'dark', shadow: 'soft' },
+  };
+}
+
+const MATERIAL_PALETTES = {
+  violet: '#6750A4', indigo: '#3F51B5', blue: '#1565C0', cyan: '#00838F',
+  teal: '#006B5E', emerald: '#2E7D32', lime: '#687D00', amber: '#9A6700',
+  coral: '#B44932', rose: '#A43F68', plum: '#7B3F91', slate: '#526570',
+};
+for (const [name, primary] of Object.entries(MATERIAL_PALETTES)) {
+  for (const appearance of ['light', 'dark']) {
+    const { preset, ...theme } = materialTheme({ primary, appearance });
+    PRESETS[`material-${name}-${appearance}`] = resolveTheme({ preset, ...theme });
+  }
+}
+
+/** An explicit user choice wins over agent output and category defaults. */
+export function selectedTheme(app, fallback) {
+  const selection = app.themeSelection;
+  validateThemeSelection(selection);
+  if (selection?.mode === 'preset') return { preset: selection.preset };
+  if (selection?.mode === 'material') return materialTheme(selection);
+  return fallback;
+}
 
 export const CATEGORY_PRESET = {
   finance: 'sage-mist', business: 'swiss-paper', tools: 'fog-lilac',

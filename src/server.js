@@ -12,7 +12,7 @@ import { buildProject, deckEntries, setEntryMode } from './core/build.js';
 import { exportProject } from './core/export.js';
 import { runPipeline } from './core/pipeline.js';
 import { listAgents } from './core/agents.js';
-import { PRESETS } from './templates/themes.js';
+import { PRESETS, selectedTheme, validateThemeSelection } from './templates/themes.js';
 
 const jobs = new Map(); // id → { id, project, status, lines[], listeners:Set, controller }
 
@@ -44,6 +44,12 @@ export function createApp() {
   }));
 
   app.get('/api/projects', wrap(async (_req, res) => res.json(await listProjects())));
+
+  app.post('/api/themes/resolve', wrap(async (req, res) => {
+    validateThemeSelection(req.body);
+    if (req.body.mode === 'auto') return res.status(422).json({ error: 'Select a preset or Material palette to preview; AI selection uses the planner.' });
+    res.json(selectedTheme({ themeSelection: req.body }));
+  }));
 
   app.post('/api/projects', wrap(async (req, res) => {
     const p = await createProject(req.body.name, req.body.app ?? {});

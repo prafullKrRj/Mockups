@@ -88,3 +88,16 @@ test('localized plans expose separate deck entries and select HTML by locale', a
   assert.match(await (await fetch(`${url}?locale=hi-IN`)).text(), /आपका पैसा/);
 
 });
+
+test('theme preview and saved selections share validation and survive reload', async () => {
+  const selection = { mode: 'material', primary: '#386A20', secondary: '#795548', tertiary: '#006D77', appearance: 'dark' };
+  const preview = await call('POST', '/api/themes/resolve', selection);
+  assert.equal(preview.status, 200);
+  assert.match(preview.data.colors.accent, /^#[0-9A-F]{6}$/);
+  assert.equal((await call('POST', '/api/themes/resolve', { mode: 'auto' })).status, 422);
+  assert.equal((await call('POST', '/api/themes/resolve', { ...selection, primary: 'invalid' })).status, 422);
+  assert.equal((await call('PUT', '/api/projects/alpha/app', { name: 'Alpha', themeSelection: selection })).status, 200);
+  assert.deepEqual((await call('GET', '/api/projects/alpha')).data.app.themeSelection, selection);
+  assert.equal((await call('PUT', '/api/projects/alpha/app', { themeSelection: { mode: 'preset', preset: 'missing' } })).status, 422);
+  assert.deepEqual((await call('GET', '/api/projects/alpha')).data.app.themeSelection, selection);
+});

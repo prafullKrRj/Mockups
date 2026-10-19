@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validatePlan, heuristicPlan, clip } from '../src/core/plan.js';
 import { renderSlide, renderFeatureGraphic } from '../src/templates/render.js';
-import { resolveTheme, contrast, PRESETS } from '../src/templates/themes.js';
+import { resolveTheme, contrast, PRESETS, materialTheme, validateThemeSelection } from '../src/templates/themes.js';
 
 const project = {
   app: {
@@ -87,4 +87,34 @@ test('validator warns on generated-design tells', () => {
   assert.ok(warnings.some((w) => w.includes('eyebrow')));
   assert.ok(warnings.some((w) => w.includes('highlight')));
   assert.ok(warnings.some((w) => w.includes('decor')));
+});
+
+test('Material palettes generate readable roles from arbitrary color combinations', () => {
+  assert.equal(Object.keys(PRESETS).length, 39);
+  for (const primary of ['#FFFFFF', '#000000', '#FF0000', '#00FF00', '#0000FF']) {
+    for (const appearance of ['light', 'dark']) {
+      const theme = materialTheme({ primary, secondary: '#FFFF00', tertiary: '#FF00FF', appearance });
+      const plan = { ...heuristicPlan(project), theme };
+      assert.deepEqual(validatePlan(plan, project).errors, []);
+      assert.ok(contrast(theme.colors.surfaceText, theme.colors.surface) >= 4.5);
+      for (const value of Object.values(theme.colors)) assert.match(value, /^#[0-9A-F]{6}$/);
+    }
+  }
+});
+
+test('manual selections override genre and brand colors when replanning', () => {
+  const app = { ...project.app, brandColors: ['#FF0000'], themeSelection: { mode: 'preset', preset: 'material-blue-dark' } };
+  assert.deepEqual(heuristicPlan({ ...project, app }).theme, { preset: 'material-blue-dark' });
+  app.themeSelection = { mode: 'material', primary: '#123456', appearance: 'light' };
+  assert.deepEqual(heuristicPlan({ ...project, app }).theme, materialTheme(app.themeSelection));
+  app.themeSelection = { mode: 'auto', brief: 'Calm finance app' };
+  assert.equal(heuristicPlan({ ...project, app }).theme.preset, 'sage-mist');
+});
+
+test('invalid theme selections fail before persistence', () => {
+  for (const selection of [null, [], { mode: 'bad' }, { mode: 'preset', preset: 'toString' },
+    { mode: 'material', primary: 'red', appearance: 'light' },
+    { mode: 'material', primary: '#123456', appearance: 'bad' }, { mode: 'auto', brief: 42 }]) {
+    assert.throws(() => validateThemeSelection(selection), { status: 422 });
+  }
 });
