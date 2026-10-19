@@ -14,14 +14,15 @@ if (!names.length) {
 for (const arg of names) {
   const [name, alias = name] = arg.split(':');
   const p = await loadProject(name);
+  const exportDir = path.join(p.paths.export, ...(p.app.locales ? [p.app.locales[0]] : []));
   const out = path.join(ROOT, 'samples', alias);
   await fs.rm(out, { recursive: true, force: true });
   await fs.mkdir(path.join(out, 'slides'), { recursive: true });
   await sharp(path.join(p.paths.runs, 'contact-sheet.png')).png({ compressionLevel: 9, palette: false }).toFile(path.join(out, 'deck.png'));
-  for (const f of p.exports.feature) await fs.copyFile(path.join(p.paths.export, 'feature', f), path.join(out, f));
+  for (const f of p.exports.feature) await fs.copyFile(path.join(exportDir, 'feature', f), path.join(out, f));
   // Half-size slides keep the repo light; full-size PNGs come from `mockup export`.
   for (const f of p.exports.phone) {
-    await sharp(path.join(p.paths.export, 'phone', f)).resize(540).png({ compressionLevel: 9 }).toFile(path.join(out, 'slides', f));
+    await sharp(path.join(exportDir, 'phone', f)).resize(540).png({ compressionLevel: 9 }).toFile(path.join(out, 'slides', f));
   }
   await fs.copyFile(p.paths.plan, path.join(out, 'plan.json'));
   await fs.copyFile(p.paths.app, path.join(out, 'app.json'));

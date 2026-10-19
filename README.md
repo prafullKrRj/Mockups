@@ -256,7 +256,7 @@ relative to the existing inputs. PNGs and the ZIP use `export/<locale>/phone/` a
 `export/<locale>/feature/`. Full export removes obsolete generated locale folders
 and v1 image folders. QA keys use `<locale>/<slide-id>`; each locale has its own
 `.runs/contact-sheet-<locale>.png`, with the first locale also available at the
-legacy `.runs/contact-sheet.png` path.
+legacy `.runs/contact-sheet.png` path. `scripts/collect-samples.js` collects the first locale.
 
 Dashboard header switches locale for plan editing, previews, HTML editing, export
 and store preview. Select a translation agent before Generate to fill locales.
