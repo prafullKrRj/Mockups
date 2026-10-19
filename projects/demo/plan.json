@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "generatedBy": "heuristic",
+  "app": {
+    "name": "Paisa Calm",
+    "tagline": "Budgets, bills and spending in one calm place"
+  },
+  "theme": {
+    "preset": "swiss-paper",
+    "colors": {
+      "accent": "#4C3BFF",
+      "accent2": "#FF8A4C"
+    }
+  },
+  "slides": [
+    {
+      "id": "s1-home",
+      "role": "hero",
+      "layout": "hero",
+      "screenshots": [
+        "01-home.png"
+      ],
+      "eyebrow": "FINANCE",
+      "headline": "Home",
+      "subline": "Total balance across accounts and the latest transactions"
+    },
+    {
+      "id": "s2-budgets",
+      "role": "feature",
+      "layout": "device-bottom",
+      "screenshots": [
+        "02-budgets.png"
+      ],
+      "headline": "Budgets",
+      "subline": "Monthly budget per category with progress bars"
+    },
+    {
+      "id": "s3-insights",
+      "role": "feature",
+      "layout": "device-top",
+      "screenshots": [
+        "03-insights.png"
+      ],
+      "headline": "Insights",
+      "subline": "Weekly spending chart and top categories"
+    },
+    {
+      "id": "s4-scan",
+      "role": "feature",
+      "layout": "tilted",
+      "screenshots": [
+        "04-scan.png"
+      ],
+      "headline": "Receipt scan",
+      "subline": "Point the camera at a paper receipt to add an expense"
+    },
+    {
+      "id": "s5-bills",
+      "role": "closer",
+      "layout": "closer",
+      "screenshots": [
+        "05-bills.png"
+      ],
+      "headline": "Bills",
+      "subline": "Upcoming bills with due dates and reminders",
+      "badges": [
+        "Works offline",
+        "No ads",
+        "No sign-up"
+      ]
+    }
+  ],
+  "featureGraphic": {
+    "layout": "fg-fan",
+    "headline": "Budgets, bills and spending in one calm plac",
+    "screenshots": [
+      "01-home.png",
+      "02-budgets.png",
+      "03-insights.png"
+    ]
+  }
+}
