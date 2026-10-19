@@ -392,6 +392,11 @@ async function init() {
     const name = new FormData(e.target).get('name');
     try { await api('/api/projects', { method: 'POST', body: { name } }); e.target.reset(); location.hash = name; } catch (err) { toast(err.message, true); }
   });
+  $('#duplicate').addEventListener('click', async () => {
+    const to = prompt('Name for the copy', `${state.name}-v2`);
+    if (!to) return;
+    try { await api(`/api/projects/${encodeURIComponent(state.name)}/duplicate`, { method: 'POST', body: { to } }); location.hash = to; toast(`Duplicated as ${to}`); } catch (e) { toast(e.message, true); }
+  });
   $('#save-app').addEventListener('click', () => saveApp().catch((e) => toast(e.message, true)));
   $('#shots').addEventListener('click', async (e) => {
     const kind = e.target.dataset.del;

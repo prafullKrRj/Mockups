@@ -6,7 +6,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { ROOT, PROJECTS_DIR, IMAGE_EXT, assertFileName, projectPaths } from './core/paths.js';
-import { createProject, listProjects, loadProject, saveApp, writeJson } from './core/project.js';
+import { createProject, duplicateProject, listProjects, loadProject, saveApp, writeJson } from './core/project.js';
 import { validatePlan, heuristicPlan } from './core/plan.js';
 import { buildProject, deckEntries } from './core/build.js';
 import { exportProject } from './core/export.js';
@@ -48,6 +48,12 @@ export function createApp() {
   app.post('/api/projects', wrap(async (req, res) => {
     const p = await createProject(req.body.name, req.body.app ?? {});
     res.status(201).json(serialize(p));
+  }));
+
+  app.post('/api/projects/:name/duplicate', wrap(async (req, res) => {
+    const p = await duplicateProject(req.params.name, req.body.to);
+    if (p.plan) await buildProject(p, { force: true });
+    res.status(201).json(serialize(await loadProject(req.body.to)));
   }));
 
   app.get('/api/projects/:name', wrap(async (req, res) => {
