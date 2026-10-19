@@ -118,3 +118,15 @@ input[type=color] { padding: 2px; width: 44px; height: 34px; }
 .swatch .dots { display: flex; gap: 6px; }
 .swatch .dots i { width: 14px; height: 14px; border-radius: 50%; }
 .swatch small { font-size: 12px; opacity: .8; }
+
+.play { width: 412px; background: #fff; color: #1f1f1f; border-radius: 28px; overflow: hidden; font-family: Roboto, Inter, sans-serif; box-shadow: 0 30px 80px rgba(0,0,0,.5); }
+.play .fg { width: 100%; display: block; aspect-ratio: 1024/500; object-fit: cover; background: #eee; }
+.play .head { display: flex; gap: 16px; padding: 18px 20px 6px; align-items: center; }
+.play .head img, .play .head .ph { width: 64px; height: 64px; border-radius: 14px; background: #e8e8e8; object-fit: cover; }
+.play .head b { font-size: 20px; display: block; }
+.play .head small { color: #0b8043; font-size: 13px; font-weight: 500; }
+.play .install { margin: 14px 20px; background: #0b57d0; color: #fff; border-radius: 20px; text-align: center; padding: 10px; font-weight: 500; font-size: 14px; }
+.play .carousel { display: flex; gap: 8px; overflow-x: auto; padding: 4px 20px 16px; scrollbar-width: none; }
+.play .carousel img { height: 200px; border-radius: 8px; flex: none; }
+.play .about { padding: 0 20px 22px; font-size: 14px; line-height: 1.5; color: #444; }
+.play .about b { display: block; color: #1f1f1f; font-size: 16px; margin-bottom: 6px; }

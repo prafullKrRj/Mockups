@@ -57,6 +57,7 @@ function setProject(p) {
   renderPlan();
   renderPreviews();
   renderExports();
+  renderStore();
 }
 
 // ---------- inputs ----------
@@ -206,6 +207,10 @@ const SOOTHING = ['sage-mist', 'sand-dune', 'harbor-night', 'dusk-rose', 'fog-li
 
 function renderGallery(current) {
   const presets = state.meta.presetData;
+  if (!$('#preset-fonts')) {
+    const fams = [...new Set(Object.values(presets).map((p) => `family=${p.fonts.headline.replace(/ /g, '+')}:wght@${p.fonts.headlineWeight}`))];
+    document.head.insertAdjacentHTML('beforeend', `<link id="preset-fonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?${fams.join('&')}&display=swap">`);
+  }
   const order = [...SOOTHING, ...Object.keys(presets).filter((k) => !SOOTHING.includes(k))];
   $('#theme-gallery').innerHTML = order.filter((k) => presets[k]).map((k) => {
     const c = presets[k].colors;
@@ -328,6 +333,18 @@ function renderExports() {
   const fig = (kind, f, w) => `<figure><img src="${files(`export/${kind}`, f)}" style="width:${w}px" alt=""><figcaption><span>${h(f)}</span><a href="${files(`export/${kind}`, f)}" download="${h(f)}">download</a></figcaption></figure>`;
   $('#exports').innerHTML = [...exports.feature.map((f) => fig('feature', f, 512)), ...exports.phone.map((f) => fig('phone', f, 240))].join('') || '<div class="panel muted">No PNGs yet — export first.</div>';
   $('#zip-btn').href = `/api/projects/${encodeURIComponent(state.name)}/download.zip`;
+}
+
+function renderStore() {
+  const { app, exports, hasIcon } = state.project;
+  const fg = exports.feature[0];
+  $('#play').innerHTML = `
+    ${fg ? `<img class="fg" src="${files('export/feature', fg)}" alt="">` : '<div class="fg"></div>'}
+    <div class="head">${hasIcon ? `<img src="/files/${encodeURIComponent(state.name)}/input/icon.png?t=${state.bust}" alt="">` : '<div class="ph"></div>'}
+      <div><b>${h(app.name)}</b><small>${h(app.packageName || 'your developer name')}</small></div></div>
+    <div class="install">Install</div>
+    <div class="carousel">${exports.phone.map((f) => `<img src="${files('export/phone', f)}" alt="">`).join('') || '<span class="muted">Export to see screenshots</span>'}</div>
+    <div class="about"><b>About this app</b>${h(app.shortDescription || 'Add a short description in Inputs.')}</div>`;
 }
 
 // ---------- jobs ----------
