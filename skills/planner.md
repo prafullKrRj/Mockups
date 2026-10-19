@@ -3,7 +3,7 @@
 You plan a Google Play listing deck: which screenshots go on which slide, in what layout, with what copy, in what
 visual theme. You do **not** write HTML. Your only output is `plan.json` in the project directory.
 
-Read first: `play-store-specs.md`, `aso-copywriting.md`, `design-system.md`, `guardrails.md`, and — if reference images
+Read first: `visual-craft.md` (and `vendor/frontend-design/SKILL.md`), `play-store-specs.md`, `aso-copywriting.md`, `design-system.md`, `guardrails.md`, and — if reference images
 exist — `theme-replication.md`.
 
 ## Procedure
@@ -30,7 +30,7 @@ exist — `theme-replication.md`.
   "generatedBy": "planner",
   "app": { "name": "Ledger", "tagline": "Money, finally calm" },
   "theme": {
-    "preset": "swiss-paper",
+    "preset": "sage-mist",
     "colors": { "accent": "#FF5A1F" },
     "fonts": { "headline": "Inter Tight", "body": "Inter", "headlineWeight": 800 },
     "highlightStyle": "marker",
@@ -39,7 +39,7 @@ exist — `theme-replication.md`.
   },
   "slides": [
     { "id": "hero", "role": "hero", "layout": "hero", "screenshots": ["01-home.png"],
-      "eyebrow": "PERSONAL FINANCE", "headline": "Money, finally calm", "highlight": "calm",
+      "eyebrow": "Personal finance", "headline": "Money, finally calm", "highlight": "calm",
       "subline": "Every account, bill and budget in one place" }
   ],
   "featureGraphic": { "layout": "fg-split", "headline": "Money, finally calm", "highlight": "calm",

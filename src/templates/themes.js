@@ -12,7 +12,7 @@ export const PRESETS = {
     colors: { bg: '#07080B', bg2: '#11131C', text: '#F4F5F8', muted: '#A7ACBA', accent: '#8F8CFF', accent2: '#B3AFFF', surface: '#181A24', surfaceText: '#F4F5F8' },
     background: { type: 'radial', angle: 180 },
     fonts: { headline: 'Inter Tight', body: 'Inter', headlineWeight: 700 },
-    headlineCase: 'none', highlightStyle: 'gradient', decor: ['glow', 'dots'],
+    eyebrowStyle: 'caps', headlineCase: 'none', highlightStyle: 'gradient', decor: ['glow', 'dots'],
     device: { frame: 'titanium', shadow: 'hard' },
   },
   'bold-gradient': {
@@ -26,7 +26,7 @@ export const PRESETS = {
     colors: { bg: '#F3F1EC', bg2: '#E9E6DF', text: '#111111', muted: '#4A4A4A', accent: '#FF4F12', accent2: '#111111', surface: '#FFFFFF', surfaceText: '#111111' },
     background: { type: 'solid', angle: 180 },
     fonts: { headline: 'Inter Tight', body: 'Inter', headlineWeight: 800 },
-    headlineCase: 'none', highlightStyle: 'marker', decor: ['grid'],
+    eyebrowStyle: 'caps', headlineCase: 'none', highlightStyle: 'marker', decor: ['grid'],
     device: { frame: 'dark', shadow: 'hard' },
   },
   'clay-wellness': {
@@ -40,7 +40,7 @@ export const PRESETS = {
     colors: { bg: '#0A0B0D', bg2: '#15171C', text: '#FFFFFF', muted: '#B5B9C2', accent: '#D4FF3A', accent2: '#3AFFB4', surface: '#1C1F26', surfaceText: '#FFFFFF' },
     background: { type: 'radial', angle: 200 },
     fonts: { headline: 'Barlow Condensed', body: 'Barlow', headlineWeight: 800 },
-    headlineCase: 'upper', highlightStyle: 'color', decor: ['glow', 'grid'],
+    eyebrowStyle: 'caps', headlineCase: 'upper', highlightStyle: 'color', decor: ['glow', 'grid'],
     device: { frame: 'dark', shadow: 'hard' },
   },
   'editorial-serif': {
@@ -71,22 +71,58 @@ export const PRESETS = {
     headlineCase: 'none', highlightStyle: 'none', decor: ['none'],
     device: { frame: 'dark', shadow: 'soft' },
   },
+  // Soothing presets: low-saturation grounds, one quiet accent, sentence-case eyebrows (see skills/visual-craft.md).
+  'sage-mist': {
+    colors: { bg: '#E9EEE6', bg2: '#D6E0D3', text: '#1E2A21', muted: '#4B5A4E', accent: '#3F7253', accent2: '#A4AC86', surface: '#F7F9F5', surfaceText: '#1E2A21' },
+    background: { type: 'soft', angle: 175 },
+    fonts: { headline: 'Figtree', body: 'Figtree', headlineWeight: 700 },
+    headlineCase: 'none', highlightStyle: 'color', eyebrowStyle: 'quiet', decor: ['noise'],
+    device: { frame: 'dark', shadow: 'soft' },
+  },
+  'sand-dune': {
+    colors: { bg: '#F0E7DC', bg2: '#E3D3C1', text: '#2C241E', muted: '#5E5045', accent: '#8A5E45', accent2: '#7D8471', surface: '#FBF7F2', surfaceText: '#2C241E' },
+    background: { type: 'soft', angle: 165 },
+    fonts: { headline: 'Sora', body: 'Figtree', headlineWeight: 600 },
+    headlineCase: 'none', highlightStyle: 'none', eyebrowStyle: 'quiet', decor: ['noise'],
+    device: { frame: 'dark', shadow: 'soft' },
+  },
+  'harbor-night': {
+    colors: { bg: '#13212F', bg2: '#1D3346', text: '#EEF4F7', muted: '#A7BBC7', accent: '#86CFC9', accent2: '#4E9C9C', surface: '#203a4f', surfaceText: '#EEF4F7' },
+    background: { type: 'soft', angle: 180 },
+    fonts: { headline: 'Albert Sans', body: 'Albert Sans', headlineWeight: 700 },
+    headlineCase: 'none', highlightStyle: 'color', eyebrowStyle: 'quiet', decor: ['noise'],
+    device: { frame: 'titanium', shadow: 'soft' },
+  },
+  'dusk-rose': {
+    colors: { bg: '#F1E6E6', bg2: '#E3D0D4', text: '#38212F', muted: '#6A4D5C', accent: '#8C4766', accent2: '#C79AA6', surface: '#FCF8F8', surfaceText: '#38212F' },
+    background: { type: 'soft', angle: 170 },
+    fonts: { headline: 'Young Serif', body: 'Figtree', headlineWeight: 400 },
+    headlineCase: 'none', highlightStyle: 'none', eyebrowStyle: 'quiet', decor: ['noise'],
+    device: { frame: 'light', shadow: 'soft' },
+  },
+  'fog-lilac': {
+    colors: { bg: '#ECEBF4', bg2: '#DAD7EB', text: '#23203A', muted: '#55506F', accent: '#5E54A8', accent2: '#A9A2D6', surface: '#FAFAFD', surfaceText: '#23203A' },
+    background: { type: 'soft', angle: 170 },
+    fonts: { headline: 'Onest', body: 'Onest', headlineWeight: 700 },
+    headlineCase: 'none', highlightStyle: 'color', eyebrowStyle: 'quiet', decor: ['noise'],
+    device: { frame: 'dark', shadow: 'soft' },
+  },
 };
 
 export const CATEGORY_PRESET = {
-  finance: 'swiss-paper', business: 'swiss-paper', tools: 'swiss-paper',
-  productivity: 'aurora-light', notes: 'aurora-light', tasks: 'aurora-light',
-  health: 'clay-wellness', wellness: 'clay-wellness', sleep: 'clay-wellness', meditation: 'clay-wellness',
+  finance: 'sage-mist', business: 'swiss-paper', tools: 'fog-lilac',
+  productivity: 'fog-lilac', notes: 'sand-dune', tasks: 'fog-lilac',
+  health: 'sage-mist', wellness: 'dusk-rose', sleep: 'harbor-night', meditation: 'dusk-rose',
   fitness: 'neon-night', sports: 'neon-night',
-  ai: 'midnight-glow', developer: 'midnight-glow', pro: 'midnight-glow',
-  social: 'candy-pop', events: 'candy-pop', kids: 'candy-pop', games: 'candy-pop', dating: 'candy-pop',
-  food: 'editorial-serif', books: 'editorial-serif', travel: 'editorial-serif', lifestyle: 'editorial-serif',
-  education: 'bold-gradient', utilities: 'bold-gradient', general: 'bold-gradient', music: 'bold-gradient',
-  weather: 'ocean-calm', medical: 'ocean-calm',
+  ai: 'harbor-night', developer: 'midnight-glow', pro: 'midnight-glow',
+  social: 'candy-pop', events: 'candy-pop', kids: 'candy-pop', games: 'candy-pop', dating: 'dusk-rose',
+  food: 'sand-dune', books: 'sand-dune', travel: 'sand-dune', lifestyle: 'dusk-rose',
+  education: 'ocean-calm', utilities: 'fog-lilac', general: 'fog-lilac', music: 'harbor-night',
+  weather: 'ocean-calm', medical: 'sage-mist',
 };
 
 export function presetForCategory(category = '') {
-  return CATEGORY_PRESET[String(category).toLowerCase().trim()] ?? 'bold-gradient';
+  return CATEGORY_PRESET[String(category).toLowerCase().trim()] ?? 'fog-lilac';
 }
 
 /** Merge a plan theme over its preset; unknown presets fall back to bold-gradient. */

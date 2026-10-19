@@ -36,26 +36,29 @@ fanned phones right).
 - `colors.accent`, `colors.accent2` — highlight word, decoration, badges. Only ONE accent hue dominates.
 - `colors.muted` — subline/eyebrow colour, ≥ 3:1 contrast.
 - `colors.surface`, `colors.surfaceText` — glass cards, badges.
-- `background.type`: `linear` | `radial` | `mesh` | `solid`. `background.angle` for linear.
+- `background.type`: `soft` (calm two-tone light) | `linear` | `radial` | `mesh` | `solid`. `background.angle` for linear.
 - `fonts.headline`, `fonts.body` — any Google Fonts family. `fonts.headlineWeight` 500–900.
-- `headlineCase`: `none` | `upper`. `highlightStyle`: `color` | `gradient` | `marker` | `underline`.
+- `headlineCase`: `none` | `upper`. `highlightStyle`: `color` | `gradient` | `marker` | `underline` | `none`.
+- `eyebrowStyle`: `quiet` (sentence case, accent colour — default) | `caps` (tracked uppercase, editorial styles only).
 - `decor`: any of `blobs`, `grid`, `dots`, `glow`, `rings`, `noise`, `none`.
 - `device.frame`: `dark` | `light` | `titanium` | `none`. `device.shadow`: `soft` | `hard` | `none`.
 
 ## Presets
 
-`aurora-light`, `midnight-glow`, `bold-gradient`, `swiss-paper`, `clay-wellness`, `neon-night`, `editorial-serif`,
-`candy-pop`, `ocean-calm`, `mono-minimal`. Pick by category:
+Soothing (preferred defaults): `sage-mist`, `sand-dune`, `harbor-night` (dark), `dusk-rose`, `fog-lilac`, `ocean-calm`,
+`clay-wellness`. Expressive: `aurora-light`, `midnight-glow`, `bold-gradient`, `swiss-paper`, `neon-night`,
+`editorial-serif`, `candy-pop`, `mono-minimal`. Pick by category, then read `visual-craft.md` before committing:
 
 | Category | First pick | Also |
 |---|---|---|
-| finance, business, tools | `swiss-paper` | `midnight-glow`, `mono-minimal` |
-| productivity, notes, tasks | `aurora-light` | `mono-minimal`, `swiss-paper` |
-| health, wellness, sleep | `clay-wellness` | `ocean-calm`, `aurora-light` |
-| fitness, sports | `neon-night` | `bold-gradient` |
-| ai, developer, pro | `midnight-glow` | `mono-minimal` |
+| finance, health, medical | `sage-mist` | `harbor-night`, `swiss-paper` |
+| productivity, tools, utilities, general | `fog-lilac` | `sage-mist`, `mono-minimal` |
+| notes, books, food, travel | `sand-dune` | `editorial-serif`, `clay-wellness` |
+| wellness, meditation, lifestyle, dating | `dusk-rose` | `clay-wellness`, `sage-mist` |
+| ai, sleep, music | `harbor-night` | `midnight-glow`, `fog-lilac` |
+| developer, pro | `midnight-glow` | `harbor-night` |
+| fitness, sports | `neon-night` | `harbor-night` |
 | social, events, kids, games | `candy-pop` | `bold-gradient` |
-| food, books, travel, lifestyle | `editorial-serif` | `clay-wellness` |
-| education, utilities, general | `bold-gradient` | `ocean-calm` |
+| education, weather | `ocean-calm` | `fog-lilac` |
 
 A preset is a starting point: override any token, especially to match brand colours.

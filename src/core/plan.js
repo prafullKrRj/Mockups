@@ -34,6 +34,12 @@ export function validatePlan(plan, project) {
       warnings.push(`slides ${i - 1}–${i + 1} repeat layout "${plan.slides[i].layout}" three times in a row`);
     }
   }
+  // Generated-design tells (skills/visual-craft.md). Warnings, not errors: each is fine when deliberate.
+  const n = plan.slides.length;
+  if (n >= 4 && plan.slides.every((s) => s.eyebrow)) warnings.push('every slide has an eyebrow; keep them only where they carry information');
+  if (n >= 4 && plan.slides.filter((s) => s.highlight).length > Math.ceil(n / 2)) warnings.push('highlight words on more than half the slides read as templated; keep the strongest ones');
+  if (plan.slides.some((s) => /[·→]/.test(`${s.headline} ${s.subline ?? ''}`))) warnings.push('middle dots or arrows in copy read as template chrome');
+  if ((plan.theme.decor?.length ?? 0) > 2) warnings.push('more than two decor items; remove one');
   for (const f of plan.featureGraphic.screenshots) if (!files.has(f)) errors.push(`featureGraphic uses "${f}" which is not in input/screenshots/`);
   const fh = plan.featureGraphic.highlight;
   if (fh && !plan.featureGraphic.headline.toLowerCase().includes(fh.toLowerCase())) errors.push('featureGraphic.highlight is not part of its headline');
@@ -120,7 +126,7 @@ export function heuristicPlan(project) {
       role: i === 0 ? 'hero' : isLast ? 'closer' : 'feature',
       layout,
       screenshots,
-      ...(i === 0 && app.category ? { eyebrow: String(app.category).toUpperCase().slice(0, 30) } : {}),
+      ...(i === 0 && app.category ? { eyebrow: String(app.category).replace(/^./, (m) => m.toUpperCase()).slice(0, 30) } : {}),
       headline,
       ...(meta.description ? { subline: clip(meta.description, 90) } : {}),
       ...(isLast && app.facts?.length ? { badges: app.facts.slice(0, 3).map((f) => String(f).slice(0, 24)) } : {}),
