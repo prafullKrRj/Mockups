@@ -5,7 +5,6 @@ screen. A planner agent (Claude Code, Codex or Muse) then designs an ASO-friendl
 HTML, and a builder agent reviews and refines it. The output is Play-ready PNGs at 1080×1920, plus a 1024×500 feature
 graphic. Guardrails check every step, and a local dashboard lets you edit anything by hand.
 
-It replaces paid tools like screenhance, appscreens, app-mockup and applaunchflow for your own apps.
 
 ![SubTrack — midnight-glow deck](samples/subtrack/deck.png)
 ![SubTrack feature graphic](samples/subtrack/feature-graphic.png)
@@ -173,16 +172,6 @@ works.
 detail card) · `closer` (icon + badges).
 
 **Feature graphic:** `fg-split` · `fg-centered` · `fg-fan`.
-
-## Prior art
-
-Before building, I surveyed GitHub. The closest project is
-[ParthJadhav/app-store-screenshots](https://github.com/ParthJadhav/app-store-screenshots) (MIT, ~7k★), a Next.js
-editor skill. It is iOS-first and has no autonomous planner/builder loop or Play guardrails. Its core idea,
-*"screenshots are advertisements, not documentation"*, and its copy formulas are adapted in
-`skills/aso-copywriting.md`. [devices.css](https://github.com/picturepan2/devices.css) inspired the CSS-only device
-frame. Mockup Studio adds an Android-first headless pipeline, multi-agent support, reference theme replication, and
-code-enforced QA.
 
 ## License
 
