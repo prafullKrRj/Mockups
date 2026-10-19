@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "generatedBy": "claude",
+  "app": {
+    "name": "SubTrack",
+    "tagline": "Never pay for a forgotten renewal"
+  },
+  "theme": {
+    "preset": "harbor-night",
+    "colors": {
+      "bg": "#191C33",
+      "bg2": "#252A4A",
+      "text": "#F3F1FF",
+      "muted": "#B4B2CF",
+      "accent": "#B9B0FF",
+      "accent2": "#5B4FE0",
+      "surface": "#2C3058",
+      "surfaceText": "#F3F1FF"
+    },
+    "background": {
+      "type": "radial"
+    },
+    "fonts": {
+      "headline": "Bricolage Grotesque",
+      "body": "Figtree",
+      "headlineWeight": 700
+    },
+    "headlineCase": "none",
+    "eyebrowStyle": "quiet",
+    "highlightStyle": "color",
+    "decor": [
+      "glow"
+    ],
+    "device": {
+      "frame": "dark",
+      "shadow": "soft"
+    },
+    "referenceNotes": "Direction: a subscription tracker for busy professionals tired of surprise charges; mood is calm control, slightly wry. Memorable element: the lavender monthly-burn ring on the dashboard, echoed by a single soft lavender glow behind the hero phone. The app UI is mostly dark Material 3 with an indigo/lavender primary (#5B4FE0, #B9B0FF), so the deck uses a deep harbour-navy base (#191C33 to #252A4A, radial) instead of near-black, letting the dark screenshots sit flush and the two light screens (analytics, onboarding) read as bright moments. Lavender is the one accent, used on three headlines only. Challenge: harbor-night plus Inter would be the default for any finance app, so the type moved to Bricolage Grotesque, which has a slightly quirky, friendly grotesque voice that suits the witty tone, paired with Figtree for sublines. Removed accessory: eyebrows cut to two slides, and decor kept to glow only (no grid). No purple-to-blue gradient. The navy stays flat and quiet."
+  },
+  "slides": [
+    {
+      "id": "hero",
+      "role": "hero",
+      "layout": "hero",
+      "screenshots": [
+        "01-dashboard.png"
+      ],
+      "headline": "Know what you burn each month",
+      "highlight": "burn",
+      "subline": "Every subscription in one monthly number",
+      "notes": "Strongest screen: the burn ring. Let the phone bleed off the bottom so the ring sits in the lower-middle with the glow behind it."
+    },
+    {
+      "id": "renewals",
+      "role": "differentiator",
+      "layout": "device-bottom",
+      "screenshots": [
+        "02-subscriptions.png"
+      ],
+      "headline": "Never pay for a forgotten renewal",
+      "highlight": "forgotten renewal",
+      "subline": "See days left on every plan, with a reminder before it renews"
+    },
+    {
+      "id": "calendar",
+      "role": "feature",
+      "layout": "device-top",
+      "screenshots": [
+        "06-calendar.png"
+      ],
+      "headline": "Every renewal on one calendar",
+      "subline": "Tap a day to see what charges and how much"
+    },
+    {
+      "id": "analytics",
+      "role": "feature",
+      "layout": "callouts",
+      "screenshots": [
+        "05-analytics.png"
+      ],
+      "eyebrow": "Analytics",
+      "headline": "See your year before it bills",
+      "subline": "Projections and insights from what you already pay",
+      "callouts": [
+        "Yearly projection",
+        "Cost per day",
+        "Your priciest subscription"
+      ]
+    },
+    {
+      "id": "currency",
+      "role": "proof",
+      "layout": "two-devices",
+      "screenshots": [
+        "08-onboarding.png",
+        "03-add-subscription.png"
+      ],
+      "eyebrow": "Multi-currency",
+      "headline": "Rupees, dirhams, euros, all at once",
+      "highlight": "all at once",
+      "subline": "Choose from 51 currencies and set one per subscription",
+      "notes": "Onboarding (light) in front, add-subscription form (dark, showing currency picker and cadence) behind."
+    },
+    {
+      "id": "detail",
+      "role": "feature",
+      "layout": "zoom",
+      "screenshots": [
+        "04-detail.png"
+      ],
+      "headline": "Watch each renewal come closer",
+      "subline": "Yearly cost and daily average for every service",
+      "focus": {
+        "x": 0.03,
+        "y": 0.36,
+        "w": 0.94,
+        "h": 0.18
+      },
+      "notes": "Zoom on the renewal timeline card (started, today, renewal)."
+    },
+    {
+      "id": "closer",
+      "role": "closer",
+      "layout": "closer",
+      "screenshots": [
+        "07-settings.png"
+      ],
+      "headline": "Your subscriptions stay on your phone",
+      "subline": "No sign-up, no cloud sync, nothing new to subscribe to",
+      "badges": [
+        "No account",
+        "Works offline",
+        "Any currency"
+      ]
+    }
+  ],
+  "featureGraphic": {
+    "layout": "fg-split",
+    "headline": "Never pay for a forgotten renewal",
+    "highlight": "forgotten renewal",
+    "screenshots": [
+      "01-dashboard.png",
+      "02-subscriptions.png"
+    ]
+  }
+}

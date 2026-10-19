@@ -1,0 +1,72 @@
+{
+  "name": "SubTrack",
+  "packageName": "com.novushq.subtrack",
+  "category": "finance",
+  "shortDescription": "Track every subscription, never pay for a forgotten renewal",
+  "fullDescription": "SubTrack is a dead-simple, offline-first subscription tracker. Log every recurring subscription, see exactly what you burn per month and per year, and get notified before anything auto-renews. Any ISO 4217 currency, per-subscription currencies, renewal calendar, analytics and insights. No account, no cloud sync, no subscription to track your subscriptions.",
+  "audience": "Professionals with 5–20 subscriptions in India, SEA, Middle East and EU who lost money to forgotten auto-renewals",
+  "tone": "confident, clear, slightly witty about subscription fatigue; plain language",
+  "brandColors": [
+    "#5B4FE0",
+    "#B9B0FF"
+  ],
+  "features": [
+    "Monthly burn across every service",
+    "Renewal reminders before auto-renew",
+    "Renewal calendar",
+    "Analytics and insights",
+    "Multi-currency (any ISO 4217)",
+    "Free trials tracked separately",
+    "Offline, no account"
+  ],
+  "facts": [
+    "No account",
+    "Works offline",
+    "Any currency"
+  ],
+  "locale": "en-US",
+  "slideCount": 7,
+  "screens": {
+    "01-dashboard.png": {
+      "title": "Dashboard",
+      "description": "Monthly burn ring ($63.90 across 14 services), yearly and 7-day totals, per-currency split, free trials row",
+      "priority": 10
+    },
+    "02-subscriptions.png": {
+      "title": "All subscriptions",
+      "description": "Searchable list grouped into trials and active, each with cost, cycle and days to renewal",
+      "priority": 8
+    },
+    "03-add-subscription.png": {
+      "title": "Add subscription",
+      "description": "Quick form: service, amount, currency, billing cadence (weekly→6 months), start date, category",
+      "priority": 5
+    },
+    "04-detail.png": {
+      "title": "Subscription detail",
+      "description": "One subscription: price, yearly cost, renewal timeline progress, daily average, since-started stats",
+      "priority": 4
+    },
+    "05-analytics.png": {
+      "title": "Analytics",
+      "description": "Total monthly spend, yearly projection, per-day cost, at-a-glance counts and smart insights",
+      "priority": 7
+    },
+    "06-calendar.png": {
+      "title": "Renewal calendar",
+      "description": "Month calendar with dots on renewal days and the list of renewals for a selected day",
+      "priority": 6
+    },
+    "07-settings.png": {
+      "title": "Settings",
+      "description": "Pro unlock, default currency, dark/light/auto theme, FX base currency, notifications",
+      "priority": 2
+    },
+    "08-onboarding.png": {
+      "title": "Pick currency",
+      "description": "Onboarding step to choose a home currency from 51 currencies with flags",
+      "priority": 3
+    }
+  },
+  "notes": "Most screenshots are dark mode (Material 3, indigo/violet primary). Analytics, settings and onboarding are light mode. Free core app; optional one-time Pro unlock — never imply a subscription price."
+}

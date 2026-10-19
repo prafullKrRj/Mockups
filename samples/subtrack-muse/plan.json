@@ -1,0 +1,136 @@
+{
+  "app": {
+    "name": "SubTrack",
+    "tagline": "Track every subscription, never miss a renewal"
+  },
+  "featureGraphic": {
+    "badges": [
+      "No account",
+      "Works offline"
+    ],
+    "headline": "Never pay for a forgotten renewal",
+    "highlight": "forgotten",
+    "layout": "fg-split",
+    "screenshots": [
+      "01-dashboard.png",
+      "02-subscriptions.png"
+    ]
+  },
+  "generatedBy": "muse",
+  "slides": [
+    {
+      "eyebrow": "Subscription tracker",
+      "headline": "Every subscription, one total",
+      "highlight": "one total",
+      "id": "hero",
+      "layout": "hero",
+      "role": "hero",
+      "screenshots": [
+        "01-dashboard.png"
+      ],
+      "subline": "See your monthly burn across every service"
+    },
+    {
+      "headline": "Never pay for a forgotten renewal",
+      "highlight": "forgotten",
+      "id": "renewals",
+      "layout": "device-bottom",
+      "role": "differentiator",
+      "screenshots": [
+        "02-subscriptions.png"
+      ],
+      "subline": "Trials and subs sorted by renewal date"
+    },
+    {
+      "eyebrow": "Analytics",
+      "headline": "See where the money goes",
+      "id": "analytics",
+      "layout": "device-top",
+      "role": "feature",
+      "screenshots": [
+        "05-analytics.png"
+      ],
+      "subline": "Projections, daily cost and smart insights"
+    },
+    {
+      "headline": "Every renewal on one calendar",
+      "id": "calendar",
+      "layout": "device-bottom",
+      "role": "feature",
+      "screenshots": [
+        "06-calendar.png"
+      ],
+      "subline": "Tap any day to see exactly what renews"
+    },
+    {
+      "headline": "Log it in seconds",
+      "highlight": "seconds",
+      "id": "track-true-cost",
+      "layout": "two-devices",
+      "notes": "One story across two screens: logging a sub (03) reveals its true cost (04).",
+      "role": "feature",
+      "screenshots": [
+        "03-add-subscription.png",
+        "04-detail.png"
+      ],
+      "subline": "Yearly and daily cost, worked out for you"
+    },
+    {
+      "eyebrow": "Multi-currency",
+      "headline": "Track in any currency",
+      "id": "currency",
+      "layout": "device-bottom",
+      "role": "proof",
+      "screenshots": [
+        "08-onboarding.png"
+      ],
+      "subline": "51 currencies, with a choice on every sub"
+    },
+    {
+      "badges": [
+        "No account",
+        "Works offline",
+        "Any currency"
+      ],
+      "headline": "Subscriptions, finally under control",
+      "id": "closer",
+      "layout": "closer",
+      "role": "closer",
+      "screenshots": [
+        "07-settings.png"
+      ],
+      "subline": "Your data stays on your device"
+    }
+  ],
+  "theme": {
+    "background": {
+      "type": "soft"
+    },
+    "colors": {
+      "accent": "#5B4FE0",
+      "accent2": "#8F83F2",
+      "bg": "#F1EEFB",
+      "bg2": "#E2DCF7",
+      "muted": "#5B5678",
+      "surface": "#FFFFFF",
+      "surfaceText": "#201D36",
+      "text": "#201D36"
+    },
+    "decor": [
+      "rings"
+    ],
+    "device": {
+      "frame": "titanium",
+      "shadow": "soft"
+    },
+    "fonts": {
+      "body": "Inter",
+      "headline": "Sora",
+      "headlineWeight": 700
+    },
+    "highlightStyle": "color",
+    "preset": "fog-lilac",
+    "referenceNotes": "Design direction: app UI is dark Material 3 with an indigo primary and a glowing lavender burn ring, so the deck is its calm inverse — a light lilac mist that makes the dark phones pop, with one memorable motif: a thin ring echoing the burn ring. Challenge check: the default finance pick (sage-mist green) would fight the violet UI, so switched the temperature axis to lilac and set the brand indigo #5B4FE0 as the single accent; highlights on 3 of 7 slides only."
+  },
+  "version": 1
+}

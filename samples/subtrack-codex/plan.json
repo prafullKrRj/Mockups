@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "generatedBy": "codex",
+  "app": {
+    "name": "SubTrack",
+    "tagline": "Fewer renewal surprises",
+    "icon": "input/icon.png"
+  },
+  "theme": {
+    "preset": "harbor-night",
+    "colors": {
+      "bg": "#181B30",
+      "bg2": "#24283F",
+      "text": "#F5F3FF",
+      "muted": "#C0BED5",
+      "accent": "#B9B0FF",
+      "accent2": "#5B4FE0",
+      "surface": "#30344F",
+      "surfaceText": "#F5F3FF"
+    },
+    "background": {
+      "type": "linear",
+      "angle": 160
+    },
+    "fonts": {
+      "headline": "Barlow Semi Condensed",
+      "body": "Manrope",
+      "headlineWeight": 700
+    },
+    "headlineCase": "none",
+    "eyebrowStyle": "quiet",
+    "highlightStyle": "color",
+    "decor": [
+      "none"
+    ],
+    "device": {
+      "frame": "none",
+      "shadow": "soft"
+    },
+    "referenceNotes": "Subscription clarity for professionals juggling recurring bills: calm indigo dusk, with the real lavender monthly-burn ring as the single memorable element. No reference images supplied. All eight screenshots inspected: five charcoal screens with lavender controls; analytics, settings and currency onboarding use pale lilac surfaces and indigo controls. Start from harbor-night, replacing its marine palette with the app's indigo family rather than generic finance sage. Barlow Semi Condensed gives short, practical headlines a distinctive compact rhythm; Manrope keeps supporting copy clear. Keep the two background stops close and decoration absent; the app's ring supplies the visual character without adding ornamental circles. Use only two highlighted headlines. Frame-free screenshot panels avoid adding device trademarks. Preserve screenshot pixels, including status bars, sample dates and permission states. Text stays within 72 px margins, headlines at least 84 px and sublines at least 36 px on 1080 x 1920 slides. All promoted features come from app.json; sample spending figures are not savings claims. Review 1: replace grey corner haze with a quiet 160-degree indigo gradient. Tighten text-to-screen gaps, enlarge analytics and settings, show both currency fields with minimal overlap, and enlarge the actual Numbers crop. Preserve the ring as the only luminous motif; remove the trial headline highlight."
+  },
+  "slides": [
+    {
+      "id": "monthly-burn",
+      "role": "hero",
+      "layout": "hero",
+      "screenshots": [
+        "01-dashboard.png"
+      ],
+      "headline": "Know your monthly burn",
+      "subline": "Every recurring bill, one monthly total. Yearly view included.",
+      "background": "default",
+      "notes": "Center the headline above a large upright screenshot bleeding off the bottom. Keep the real burn ring and per-currency split visible. Let the ring carry the hero composition; add no floating totals or decorative rings. Lower trial content may bleed beyond the canvas.",
+      "mode": "custom"
+    },
+    {
+      "id": "trial-awareness",
+      "role": "differentiator",
+      "layout": "device-bottom",
+      "screenshots": [
+        "02-subscriptions.png"
+      ],
+      "headline": "Catch trials before they charge",
+      "subline": "Separate trial and active lists show prices and days left",
+      "background": "default",
+      "notes": "Left-aligned text with a large screenshot below. Keep both trial cards and at least the first active card visible. The screenshot's trial grouping and renewal countdowns support this benefit. Do not imply automatic cancellation.",
+      "mode": "custom"
+    },
+    {
+      "id": "spending-insights",
+      "role": "feature",
+      "layout": "device-top",
+      "screenshots": [
+        "05-analytics.png"
+      ],
+      "headline": "See where your money goes",
+      "subline": "Yearly projections and daily costs put recurring bills in perspective",
+      "background": "alt",
+      "notes": "Place the pale analytics screen above a left-aligned bottom text block. Bleed only the top status/header area, keeping the monthly summary, yearly projection and at-a-glance counts readable. Keep text clear of the screenshot. The visible no-FX currency selector must not become an exchange-rate claim. Custom: 720 px panel, top -130 px, bottom text at 1460 px; only status/header area bleeds.",
+      "mode": "custom"
+    },
+    {
+      "id": "renewal-calendar",
+      "role": "feature",
+      "layout": "device-bottom",
+      "screenshots": [
+        "06-calendar.png"
+      ],
+      "headline": "Get ahead of auto-renewals",
+      "subline": "Check upcoming dates and get reminders before payments are due",
+      "background": "default",
+      "notes": "Show the month grid prominently beneath the headline. Keep the actual selected-day list intact; its sample card date differs from the selected date, so do not enlarge or annotate that row as proof of a matching renewal. Reminder capability is supported by app.json; do not invent a notification overlay.",
+      "mode": "custom"
+    },
+    {
+      "id": "per-service-currencies",
+      "role": "feature",
+      "layout": "two-devices",
+      "screenshots": [
+        "03-add-subscription.png",
+        "08-onboarding.png"
+      ],
+      "headline": "Every service, its own currency",
+      "subline": "Choose a home currency. Log each bill in its original currency.",
+      "background": "alt",
+      "notes": "These screens tell one setup story: home currency plus the currency of each subscription. Put the add form in front, keeping its currency field and cadence visible. Offset the pale onboarding screen behind it so the selected USD row and nearby currency choices remain visible. Keep lateral bleed below 12 percent. Do not promise automatic conversion or equate the visible 51-choice picker with all ISO currencies. Custom: add form in front on the left; picker behind on the right, with less than 15 percent overlap so both currency controls remain visible.",
+      "mode": "custom"
+    },
+    {
+      "id": "true-cost",
+      "role": "proof",
+      "layout": "zoom",
+      "screenshots": [
+        "04-detail.png"
+      ],
+      "headline": "Small fees add up",
+      "highlight": "add up",
+      "subline": "Compare monthly, yearly and daily costs for each subscription",
+      "focus": {
+        "x": 0.04,
+        "y": 0.617,
+        "w": 0.92,
+        "h": 0.16
+      },
+      "background": "default",
+      "notes": "Magnify the real four-cell Numbers block, including monthly, yearly, daily average and since-started values. Retain the full screenshot as a secondary panel. Keep source pixels unaltered: achieve any faded-phone effect through surrounding composition, not blur, recoloring or an overlay on the screenshot. The focus box is normalized to the complete supplied image. Custom: 936 px-wide Numbers crop above a separate 700 px-wide full screenshot; no overlap or faded source pixels.",
+      "mode": "custom"
+    },
+    {
+      "id": "offline-calm",
+      "role": "closer",
+      "layout": "closer",
+      "screenshots": [
+        "07-settings.png"
+      ],
+      "headline": "Less subscription fatigue",
+      "subline": "No login. No internet needed. Your subscriptions, in one place.",
+      "badges": [
+        "Works offline",
+        "No account"
+      ],
+      "background": "alt",
+      "notes": "Use the provided app icon, two factual badges and a smaller settings screenshot below the copy. Theme and currency controls demonstrate personal setup. Keep the visible notification-permission warning intact and do not imply reminders are already enabled. Pro is optional and a one-time unlock; do not add a recurring price, free claim or purchase CTA.",
+      "mode": "custom"
+    }
+  ],
+  "featureGraphic": {
+    "layout": "fg-split",
+    "headline": "Fewer renewal surprises",
+    "screenshots": [
+      "01-dashboard.png"
+    ],
+    "notes": "At 1024 x 500, place the automatically rendered SubTrack name and tagline on the left, within 64 px horizontal and 48 px vertical safe margins. Keep essential text away from the center overlay area. Use one frame-free dashboard panel on the right, positioned so the real lavender burn ring remains recognizable. Match the indigo dusk palette; no extra badges, sample savings or device trademarks."
+  }
+}
