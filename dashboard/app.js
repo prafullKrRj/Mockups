@@ -36,7 +36,7 @@ const files = (kind, f) => `/files/${encodeURIComponent(state.name)}/${kind}/${e
 // ---------- projects ----------
 async function loadProjects() {
   const list = await api('/api/projects');
-  $('#project-list').innerHTML = list.map((p) => `<a href="#${h(p.name)}" class="${p.name === state.name ? 'on' : ''}"><span>${h(p.appName || p.name)}</span><small>${p.screenshots} shots</small></a>`).join('') || '<div class="muted">No projects yet</div>';
+  $('#project-list').innerHTML = list.map((p) => `<a href="#${h(p.name)}" class="${p.name === state.name ? 'on' : ''}"><span>${h(p.name)}<br><small>${h(p.appName ?? '')}</small></span><small>${p.screenshots} shots · ${p.exported} png</small></a>`).join('') || '<div class="muted">No projects yet</div>';
 }
 
 async function openProject(name) {

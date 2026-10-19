@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import archiver from 'archiver';
+import { ZipArchive } from 'archiver';
 import sharp from 'sharp';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -180,7 +180,7 @@ export function createApp() {
   app.get('/api/projects/:name/download.zip', wrap(async (req, res) => {
     const p = projectPaths(req.params.name);
     res.attachment(`${req.params.name}-play-listing.zip`);
-    const zip = archiver('zip', { zlib: { level: 6 } });
+    const zip = new ZipArchive({ zlib: { level: 6 } });
     zip.on('error', (err) => res.destroy(err));
     zip.pipe(res);
     zip.directory(p.export, false);
