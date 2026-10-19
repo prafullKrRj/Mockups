@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "generatedBy": "claude",
+  "app": {
+    "name": "Mockup Studio",
+    "tagline": "Raw screenshots in, listing out"
+  },
+  "theme": {
+    "preset": "harbor-night",
+    "colors": {
+      "bg": "#191C34",
+      "bg2": "#242845",
+      "text": "#F9F8FA",
+      "muted": "#B4B2CC",
+      "accent": "#A597FF",
+      "accent2": "#7C6CFF",
+      "surface": "#2A2E52",
+      "surfaceText": "#F9F8FA"
+    },
+    "background": {
+      "type": "linear",
+      "angle": 180
+    },
+    "fonts": {
+      "headline": "Plus Jakarta Sans",
+      "body": "Inter",
+      "headlineWeight": 700
+    },
+    "headlineCase": "none",
+    "eyebrowStyle": "quiet",
+    "highlightStyle": "color",
+    "decor": [
+      "glow"
+    ],
+    "device": {
+      "frame": "dark",
+      "shadow": "soft"
+    },
+    "referenceNotes": "Direction: a quiet workbench for indie Android devs; calm, precise, deep harbour navy so the dark violet dashboard UI sits in its own world. Memorable element: the soft violet highlight that echoes the app's own accent buttons. Reference (SubTrack deck, made by this tool): vertical linear gradient of deep indigo-navy (#191C34 to #242845, measured), faint violet glow behind devices, white tight geometric grotesk at bold weight (mapped to Plus Jakarta Sans), one lavender highlight phrase on some headlines (#A597FF = brand light violet), sentence-case quiet eyebrows on a few slides, dark-framed phones bleeding off edges, glass callout cards on navy surface. Rhythm mirrored: centred hero, text-top, text-bottom, callouts, two phones, text-top, closer with badges. Note: 03-slide-editor.png actually shows the Plan and theme step with validation warnings, and 08-generate-log.png shows the export run log with a check per slide; copy written to what is visible."
+  },
+  "slides": [
+    {
+      "id": "hero",
+      "role": "hero",
+      "layout": "hero",
+      "screenshots": [
+        "04-previews.png"
+      ],
+      "headline": "Raw screenshots in, listing out",
+      "highlight": "listing",
+      "subline": "Agents plan the deck, you check every slide live"
+    },
+    {
+      "id": "themes",
+      "role": "differentiator",
+      "layout": "device-bottom",
+      "screenshots": [
+        "02-theme-gallery.png"
+      ],
+      "eyebrow": "Themes",
+      "headline": "Pick a calm look in one tap",
+      "subline": "Presets with live font and colour swatches"
+    },
+    {
+      "id": "store-preview",
+      "role": "feature",
+      "layout": "device-top",
+      "screenshots": [
+        "07-store-preview.png"
+      ],
+      "headline": "See it the way Play shows it",
+      "subline": "Your screenshots at real thumbnail size, before you upload"
+    },
+    {
+      "id": "export",
+      "role": "feature",
+      "layout": "callouts",
+      "screenshots": [
+        "06-export.png"
+      ],
+      "headline": "Play-ready PNGs in one click",
+      "highlight": "one click",
+      "subline": "Every slide plus the feature graphic, sized for the store",
+      "callouts": [
+        "1×, 1.5× or 2× scale",
+        "Feature graphic included",
+        "Zip download"
+      ]
+    },
+    {
+      "id": "inputs",
+      "role": "feature",
+      "layout": "two-devices",
+      "screenshots": [
+        "01-inputs.png",
+        "03-slide-editor.png"
+      ],
+      "eyebrow": "Plan",
+      "headline": "Describe your app once",
+      "subline": "Name, tone and features shape the plan, with warnings when copy runs long"
+    },
+    {
+      "id": "html-editor",
+      "role": "proof",
+      "layout": "device-bottom",
+      "screenshots": [
+        "05-html-editor.png"
+      ],
+      "headline": "Edit any slide by hand",
+      "highlight": "by hand",
+      "subline": "Your HTML edits survive every re-render"
+    },
+    {
+      "id": "closer",
+      "role": "closer",
+      "layout": "closer",
+      "screenshots": [
+        "08-generate-log.png"
+      ],
+      "headline": "Runs on your own machine",
+      "subline": "Bring Claude, Codex or Muse to plan and build",
+      "badges": [
+        "Runs locally",
+        "Claude, Codex or Muse",
+        "Play-ready PNGs"
+      ]
+    }
+  ],
+  "featureGraphic": {
+    "layout": "fg-split",
+    "headline": "Raw screenshots in, listing out",
+    "highlight": "listing",
+    "screenshots": [
+      "04-previews.png",
+      "07-store-preview.png"
+    ]
+  }
+}
