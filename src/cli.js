@@ -61,12 +61,15 @@ try {
     case 'agents':
       console.table(await listAgents());
       break;
-    case 'run':
-      await runPipeline(name, {
+    case 'run': {
+      const result = await runPipeline(name, {
         planner: values.planner, builder: values.builder, rounds: Number(values.rounds), model: values.model,
         scale: Number(values.scale), steps: values.steps?.split(','), log,
       });
+      // Non-zero exit when any slide fails QA, so CI and scripts can gate on it.
+      if (Object.values(result.qa?.slides ?? {}).some((r) => r.errors.length)) process.exitCode = 2;
       break;
+    }
     case 'build':
       await runPipeline(name, { steps: ['build'], log });
       break;
