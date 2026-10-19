@@ -77,3 +77,14 @@ test('theme overrides merge over the preset', () => {
   assert.equal(t.colors.accent, '#FF0000');
   assert.equal(t.colors.bg, PRESETS['midnight-glow'].colors.bg);
 });
+
+test('validator warns on generated-design tells', () => {
+  const plan = heuristicPlan(project);
+  plan.slides = plan.slides.concat(plan.slides.map((s) => ({ ...s, id: `${s.id}-b` })));
+  for (const s of plan.slides) { s.eyebrow = 'Tag'; s.highlight = s.headline.split(' ')[0]; }
+  plan.theme.decor = ['blobs', 'grid', 'rings'];
+  const { warnings } = validatePlan(plan, project);
+  assert.ok(warnings.some((w) => w.includes('eyebrow')));
+  assert.ok(warnings.some((w) => w.includes('highlight')));
+  assert.ok(warnings.some((w) => w.includes('decor')));
+});
