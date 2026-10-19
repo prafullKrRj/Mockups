@@ -287,7 +287,8 @@ export function renderSlide({ plan, slide, index, shots, app }) {
       parts.push(textBlock({ slide, x: M, y: 150, w: textW, h: 500 }));
       parts.push(deviceHtml({ file: s1, dims: dims(s1), w, x: M, y: 720, theme }));
       slide.callouts.slice(0, 3).forEach((t, i) => {
-        parts.push(`<div class="card" style="left:${500 + (i % 2) * 40}px;top:${900 + i * 270}px;max-width:${W - 500 - M}px"><i></i><span>${esc(t)}</span></div>`);
+        const left = 500 + (i % 2) * 40;
+        parts.push(`<div class="card" style="left:${left}px;top:${900 + i * 270}px;max-width:${W - left - M}px"><i></i><span>${esc(t)}</span></div>`);
       });
       break;
     }
