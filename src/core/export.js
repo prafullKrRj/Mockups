@@ -41,7 +41,8 @@ function inspectPage({ kind, expected }) {
     if (r.left < margin.x - 1 || r.top < margin.y - 1 || r.right > cw - margin.x + 1 || r.bottom > ch - margin.y + 1) {
       errors.push(`text "${label}" leaves the safe area (${r.left | 0},${r.top | 0} → ${r.right | 0},${r.bottom | 0})`);
     }
-    if (el.scrollHeight > el.clientHeight + Math.max(2, fs * 0.15) && cs.overflow !== 'visible') errors.push(`text "${label}" is clipped (overflow)`);
+    const slack = fs * (0.15 + Math.max(0, 1.2 - (parseFloat(cs.lineHeight) || fs * 1.2) / fs));
+    if (el.scrollHeight > el.clientHeight + Math.max(2, slack) && cs.overflow !== 'visible') errors.push(`text "${label}" is clipped (overflow)`);
   }
   if (headline) {
     const hr = headline.getBoundingClientRect();

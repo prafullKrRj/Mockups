@@ -191,7 +191,9 @@ const FIT_SCRIPT = `<script>
   for (const el of document.querySelectorAll('[data-fit]')) {
     let s = parseFloat(getComputedStyle(el).fontSize);
     const min = parseFloat(el.dataset.min || 40);
-    while ((el.scrollHeight > el.clientHeight + s * 0.12 || el.scrollWidth > el.clientWidth + 1) && s > min) {
+    // Tall fonts with tight line-height overflow their line box by design; only real wrapping counts.
+    const slack = () => s * (0.12 + Math.max(0, 1.2 - parseFloat(getComputedStyle(el).lineHeight) / s));
+    while ((el.scrollHeight > el.clientHeight + slack() || el.scrollWidth > el.clientWidth + 1) && s > min) {
       s -= 2; el.style.fontSize = s + 'px';
     }
   }
