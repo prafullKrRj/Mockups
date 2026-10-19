@@ -101,7 +101,7 @@ function renderInputs() {
   const { app, screenshots, references, hasIcon } = state.project;
   const field = (k, label, type = 'text', wide = false) => `<label class="${wide ? 'wide' : ''}">${label}${type === 'textarea'
     ? `<textarea name="${k}">${h(app[k])}</textarea>`
-    : `<input name="${k}" type="${type}" value="${h(app[k])}">`}</label>`;
+    : `<input name="${k}" type="${type}" ${k === 'shortDescription' ? 'maxlength="80"' : ''} value="${h(app[k])}">`}</label>`;
   const brand = app.brandColors ?? [];
   $('#app-form').innerHTML = `
     ${field('name', 'App name')}
@@ -115,7 +115,7 @@ function renderInputs() {
     <label class="wide">Features (one per line)<textarea name="features">${h((app.features ?? []).join('\n'))}</textarea></label>
     <label class="wide">True facts / badges (one per line — "No ads", "Works offline")<textarea name="facts">${h((app.facts ?? []).join('\n'))}</textarea></label>
     <label>Brand colours<div class="row">
-      <input type="color" name="brand0" value="${brand[0] ?? '#7c6cff'}"><input type="color" name="brand1" value="${brand[1] ?? '#ff8a4c'}">
+      <input type="color" name="brand0" value="${brand[0] ?? '#226447'}"><input type="color" name="brand1" value="${brand[1] ?? '#d4e8b8'}">
       <label class="row" style="flex-direction:row;font-size:12px"><input type="checkbox" name="useBrand" ${brand.length ? 'checked' : ''}> use</label></div></label>
     <label>Slides<input name="slideCount" type="number" min="2" max="8" value="${app.slideCount ?? 6}"></label>
     ${field('notes', 'Notes for the agents', 'textarea', true)}`;
@@ -123,20 +123,32 @@ function renderInputs() {
   $('#shots').innerHTML = screenshots.map((s) => {
     const m = app.screens[s.file] ?? {};
     return `<div class="shot" data-file="${h(s.file)}">
-      <img src="${files('input/screenshots', s.file)}" alt="">
+      <img src="${files('input/screenshots', s.file)}" alt="${h(m.title || s.file)}">
       <div class="fields">
         <span class="name">${h(s.file)} · ${s.width}×${s.height}</span>
-        <input data-k="title" placeholder="Screen name (e.g. Budgets)" value="${h(m.title)}">
-        <input data-k="priority" type="number" min="0" max="10" title="priority (higher = earlier)" value="${m.priority ?? 0}">
-        <textarea data-k="description" placeholder="What this screen shows and why users care">${h(m.description)}</textarea>
+        <input data-k="title" aria-label="Screen name" placeholder="Screen name (e.g. Budgets)" value="${h(m.title)}">
+        <input data-k="priority" aria-label="Screen priority" type="number" min="0" max="10" title="priority (higher = earlier)" value="${m.priority ?? 0}">
+        <textarea data-k="description" aria-label="Screen description" placeholder="What this screen shows and why users care">${h(m.description)}</textarea>
       </div>
-      <button class="btn tiny danger" data-del="screenshots">✕</button>
+      <button class="btn tiny danger" data-del="screenshots" aria-label="Delete ${h(s.file)}">✕</button>
     </div>`;
   }).join('') || '<div class="muted">No screenshots yet.</div>';
 
   $('#refs').innerHTML = references.map((r) => `<div class="ref" data-file="${h(r.file)}"><img src="${files('input/reference', r.file)}" alt=""><button class="btn tiny danger" data-del="reference">✕</button></div>`).join('');
   $('#icon-preview').hidden = !hasIcon;
   if (hasIcon) $('#icon-preview').src = `/files/${encodeURIComponent(state.name)}/input/icon.png?t=${state.bust}`;
+  renderCounters($('#app-form'));
+}
+
+function renderCounters(root) {
+  for (const input of $$('[maxlength]', root)) {
+    const count = document.createElement('small');
+    count.className = 'field-count';
+    input.after(count);
+    const update = () => { count.textContent = `${input.value.length} / ${input.maxLength}`; count.classList.toggle('at-limit', input.value.length >= input.maxLength); };
+    input.addEventListener('input', update);
+    update();
+  }
 }
 
 function collectApp() {
@@ -239,6 +251,7 @@ function renderPlan() {
     <label class="wide">Tagline<input name="headline" maxlength="44" value="${h(copy(fg.headline))}"></label>
     <label class="wide">Badges (comma)<input name="badges" value="${h(listText(fg.badges))}"></label>
     ${[0, 1, 2].map((i) => `<label>Screenshot ${i + 1} ${sel(`fg${i}`, ['', ...shots], fg.screenshots[i] ?? '')}</label>`).join('')}`;
+  renderCounters($('#plan-editor'));
 }
 
 const SOOTHING = ['sage-mist', 'sand-dune', 'harbor-night', 'dusk-rose', 'fog-lilac', 'ocean-calm', 'clay-wellness'];
@@ -342,7 +355,7 @@ function previewCard(e, scale) {
   const style = getComputedStyle(main);
   scale = Math.min(scale, (main.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)) / w);
   const status = !qa ? '<span class="pill">not exported</span>' : qa.errors.length ? `<span class="pill err">${qa.errors.length} error</span>` : qa.warnings.length ? `<span class="pill warn">${qa.warnings.length} warn</span>` : '<span class="pill ok">QA ok</span>';
-  return `<div class="preview" data-id="${h(e.id)}" data-kind="${e.kind}">
+  return `<div class="preview" role="button" tabindex="0" aria-label="Edit ${h(e.id)}" data-id="${h(e.id)}" data-kind="${e.kind}">
     <div class="frame" style="width:${w * scale}px;height:${hgt * scale}px"><iframe loading="lazy" src="/files/${encodeURIComponent(state.name)}/build/${encodeURIComponent(e.file)}?t=${state.bust}" style="width:${w}px;height:${hgt}px;transform:scale(${scale})" title="${h(e.id)}"></iframe></div>
     <div class="meta"><b>${e.index + 1}. ${h(e.id)}</b>${e.mode === 'custom' ? '<span class="pill custom">custom</span>' : ''}${status}</div>
     ${qa?.errors.length ? `<div class="issues">${qa.errors.map(h).join('<br>')}</div>` : ''}
@@ -366,7 +379,8 @@ async function openSlide(id) {
   $('#dlg-code').value = await api(`/api/projects/${encodeURIComponent(state.name)}/slides/${encodeURIComponent(id)}/html${localeQuery()}`);
   dlg.showModal();
   const box = $('.dlg-preview');
-  const scale = Math.min((box.parentElement.clientHeight - 32) / hgt, 560 / w);
+  const availableWidth = window.innerWidth <= 760 ? dlg.clientWidth - 32 : dlg.clientWidth * 0.45;
+  const scale = Math.min((box.parentElement.clientHeight - 32) / hgt, availableWidth / w, 560 / w);
   box.style.width = `${w * scale}px`;
   box.style.height = `${hgt * scale}px`;
   Object.assign($('#dlg-frame').style, { width: `${w}px`, height: `${hgt}px`, transform: `scale(${scale})` });
@@ -442,10 +456,22 @@ async function exportPngs() {
 function bindDrops() {
   for (const zone of $$('.drop')) {
     const kind = zone.dataset.kind;
+    const input = $('input[type=file]', zone);
+    zone.tabIndex = 0;
+    zone.setAttribute('role', 'button');
+    zone.setAttribute('aria-label', `Upload ${kind === 'reference' ? 'reference images' : kind}`);
+    zone.addEventListener('click', (e) => { if (e.target !== input && zone.getAttribute('aria-busy') !== 'true') input.click(); });
+    zone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); zone.click(); } });
+    const upload = async (list) => {
+      if (!list.length || zone.getAttribute('aria-busy') === 'true') return;
+      zone.setAttribute('aria-busy', 'true');
+      try { await uploadFiles(kind, list); } catch (err) { toast(err.message, true); }
+      finally { zone.setAttribute('aria-busy', 'false'); input.value = ''; }
+    };
     zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('over'); });
     zone.addEventListener('dragleave', () => zone.classList.remove('over'));
-    zone.addEventListener('drop', (e) => { e.preventDefault(); zone.classList.remove('over'); uploadFiles(kind, [...e.dataTransfer.files]).catch((err) => toast(err.message, true)); });
-    $('input[type=file]', zone).addEventListener('change', (e) => uploadFiles(kind, [...e.target.files]).catch((err) => toast(err.message, true)));
+    zone.addEventListener('drop', (e) => { e.preventDefault(); zone.classList.remove('over'); upload([...e.dataTransfer.files]); });
+    input.addEventListener('change', () => upload([...input.files]));
   }
 }
 
@@ -478,6 +504,12 @@ async function init() {
   if (firstAgent) { $('#planner').value = firstAgent.id; $('#builder').value = firstAgent.id; }
 
   bindDrops();
+  let previewWidth = 0;
+  new ResizeObserver(([entry]) => {
+    if (entry.contentRect.width === previewWidth) return;
+    previewWidth = entry.contentRect.width;
+    if (state.project) renderPreviews();
+  }).observe($('#main'));
   showTab('inputs');
   $('#project-search').addEventListener('input', filterProjects);
   $('#start-project').addEventListener('click', () => { $('#new-name').scrollIntoView({ block: 'center' }); $('#new-name').focus(); });
@@ -540,7 +572,8 @@ async function init() {
   window.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 's') {
       e.preventDefault();
-      if (state.tab === 'inputs') saveApp().catch((err) => toast(err.message, true));
+      if ($('#slide-dialog').open) $('#dlg-save').click();
+      else if (state.tab === 'inputs') saveApp().catch((err) => toast(err.message, true));
       else if (state.plan) savePlan();
     }
   });
@@ -567,7 +600,8 @@ async function init() {
     }
   });
   $('#slides-form').addEventListener('change', (e) => { if (e.target.name === 'layout') { state.plan = collectPlan(); renderPlan(); } });
-  $('#previews').addEventListener('click', (e) => { const p = e.target.closest('.preview'); if (p) openSlide(p.dataset.id); });
+  $('#previews').addEventListener('click', (e) => { const p = e.target.closest('.preview'); if (p) openSlide(p.dataset.id).catch((err) => toast(err.message, true)); });
+  $('#previews').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.target.closest('.preview')?.click(); } });
   $('#refresh-preview').addEventListener('click', () => openProject(state.name));
   $('#export-now').addEventListener('click', exportPngs);
   $('#export-btn').addEventListener('click', exportPngs);
