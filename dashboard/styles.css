@@ -109,3 +109,12 @@ input[type=color] { padding: 2px; width: 44px; height: 34px; }
 .toast { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); background: var(--panel-2); border: 1px solid var(--line); padding: 10px 16px; border-radius: 10px; z-index: 30; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
 .toast.err { border-color: var(--err); color: #ffd6d6; }
 @media (max-width: 1100px) { .cols { grid-template-columns: 1fr; } }
+
+.theme-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.swatch { border: 2px solid transparent; border-radius: 14px; padding: 14px; cursor: pointer; text-align: left; min-height: 110px; display: flex; flex-direction: column; justify-content: space-between; font: inherit; }
+.swatch:hover { transform: translateY(-1px); }
+.swatch.on { border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(124,108,255,.25); }
+.swatch b { font-size: 26px; line-height: 1; }
+.swatch .dots { display: flex; gap: 6px; }
+.swatch .dots i { width: 14px; height: 14px; border-radius: 50%; }
+.swatch small { font-size: 12px; opacity: .8; }
