@@ -57,7 +57,16 @@ function putCopy(obj, key, value) {
 // ---------- projects ----------
 async function loadProjects() {
   const list = await api('/api/projects');
-  $('#project-list').innerHTML = list.map((p) => `<a href="#${h(p.name)}" class="${p.name === state.name ? 'on' : ''}"><span>${h(p.name)}<br><small>${h(p.appName ?? '')}</small></span><small>${p.screenshots} shots · ${p.exported} png</small></a>`).join('') || '<div class="muted">No projects yet</div>';
+  $('#project-count').textContent = list.length;
+  $('#project-list').innerHTML = list.map((p) => `<a href="#${h(p.name)}" class="${p.name === state.name ? 'on' : ''}" ${p.name === state.name ? 'aria-current="page"' : ''}><span>${h(p.name)}<br><small>${h(p.appName ?? '')}</small></span><small>${p.screenshots} shots<br>${p.exported} PNGs</small></a>`).join('') || '<div class="sidebar-help">Your projects will appear here.</div>';
+  filterProjects();
+}
+
+function filterProjects() {
+  const query = $('#project-search').value.trim().toLowerCase();
+  const links = $$('#project-list a');
+  links.forEach((link) => { link.hidden = !link.textContent.toLowerCase().includes(query); });
+  $('#search-empty').hidden = !query || links.some((link) => !link.hidden);
 }
 
 async function openProject(name) {
@@ -65,7 +74,7 @@ async function openProject(name) {
   setProject(await api(`/api/projects/${encodeURIComponent(name)}`));
   $('#empty').hidden = true;
   $('#project').hidden = false;
-  loadProjects();
+  await loadProjects();
 }
 
 function setProject(p) {
@@ -75,7 +84,11 @@ function setProject(p) {
   state.plan = p.plan ? structuredClone(p.plan) : null;
   state.bust = Date.now();
   $('#p-title').textContent = p.app.name;
+  $('#workspace-name').textContent = p.name;
   $('#p-sub').textContent = `projects/${p.name} · ${p.screenshots.length} screenshots · ${p.references.length} reference · ${p.plan ? `plan by ${p.plan.generatedBy ?? 'hand'}` : 'no plan'}`;
+  $('#shot-count').textContent = p.screenshots.length;
+  const progress = [[p.screenshots.length, `${p.screenshots.length} screenshots`], [p.plan, 'Plan ready'], [p.deck?.length, 'Previews built'], [exportsForLocale().phone.length, 'PNGs exported']];
+  $('#project-progress').innerHTML = progress.map(([done, label]) => `<span class="${done ? 'done' : ''}">${done ? '✓' : '○'} ${h(label)}</span>`).join('');
   renderInputs();
   renderPlan();
   renderPreviews();
@@ -438,8 +451,18 @@ function bindDrops() {
 
 function showTab(tab) {
   state.tab = tab;
-  $$('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
+  $$('#tabs button').forEach((b) => { b.classList.toggle('on', b.dataset.tab === tab); b.setAttribute('aria-current', b.dataset.tab === tab ? 'step' : 'false'); });
   $$('.tab').forEach((t) => (t.hidden = t.id !== `tab-${tab}`));
+  const sections = {
+    inputs: ['Start with your app.', 'Give your listing a story. Add app details and the screens you want to showcase.'],
+    plan: ['Find your visual direction.', 'Choose a theme, refine your copy, and arrange the story across your slides.'],
+    preview: ['See the bigger picture.', 'Review every slide. Open a preview to fine-tune its design.'],
+    export: ['Ready for your next launch.', 'Export crisp PNGs at your chosen scale, then download your listing.'],
+    store: ['Your listing, in context.', 'Check how your graphics and copy read together on Google Play.'],
+  };
+  $('#section-title').textContent = sections[tab][0];
+  $('#section-description').textContent = sections[tab][1];
+  $('#section-step').textContent = `Step ${Object.keys(sections).indexOf(tab) + 1} of 5`;
 }
 
 async function init() {
@@ -455,6 +478,9 @@ async function init() {
   if (firstAgent) { $('#planner').value = firstAgent.id; $('#builder').value = firstAgent.id; }
 
   bindDrops();
+  showTab('inputs');
+  $('#project-search').addEventListener('input', filterProjects);
+  $('#start-project').addEventListener('click', () => { $('#new-name').scrollIntoView({ block: 'center' }); $('#new-name').focus(); });
   $('#tabs').addEventListener('click', (e) => e.target.dataset.tab && showTab(e.target.dataset.tab));
   $('#new-project').addEventListener('submit', async (e) => {
     e.preventDefault();

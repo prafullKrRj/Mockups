@@ -9,21 +9,29 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to workspace</a>
 <aside class="sidebar">
   <div class="brand"><span class="logo">◧</span> Mockup Studio</div>
   <form id="new-project" class="new-project">
-    <input name="name" placeholder="new-project-name" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}" required>
-    <button class="btn primary" type="submit">Create</button>
+    <label for="new-name">Create a workspace</label>
+    <input id="new-name" name="name" placeholder="e.g. summer-launch" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}" title="Use letters, numbers, hyphens or underscores. Start with a letter or number." required>
+    <button class="btn primary" type="submit">+ Create project</button>
   </form>
-  <nav id="project-list" class="project-list"></nav>
+  <div class="project-search"><label for="project-search">Your projects <span id="project-count"></span></label><input id="project-search" type="search" placeholder="Search projects…" autocomplete="off" aria-controls="project-list"></div>
+  <nav id="project-list" class="project-list" aria-label="Projects"></nav>
+  <p id="search-empty" class="sidebar-help" hidden>No matching projects. Try another name.</p>
+  <div class="sidebar-help">Built for your next launch.<br><kbd>⌘ / Ctrl S</kbd> to save changes</div>
   <div class="sidebar-foot" id="projects-dir"></div>
 </aside>
 
-<main id="main">
+<main id="main" tabindex="-1">
+  <div class="workspace-bar"><span>Listing workspace <span class="workspace-divider">/</span> <span id="workspace-name">Your studio</span></span><span class="local-badge">● Local workspace</span></div>
   <section class="empty" id="empty">
-    <h1>Play Store listing graphics, generated.</h1>
-    <p>Create a project, drop in your screenshots, describe each screen, optionally add a sample listing whose look you
-      want — then let the planner and builder agents produce a professional, ASO-friendly deck of PNGs.</p>
+    <span class="empty-mark" aria-hidden="true">◧</span>
+    <h1>A better first impression<br>for your app.</h1>
+    <p>Turn app screenshots into a cohesive Play Store listing. Start with a project, shape your story, and export launch-ready graphics.</p>
+    <button class="btn primary" id="start-project">Create your first project</button>
+    <div class="empty-steps"><span>01<br><b>Add screenshots</b></span><span>02<br><b>Find your look</b></span><span>03<br><b>Export your listing</b></span></div>
   </section>
 
   <section id="project" hidden>
@@ -32,6 +40,10 @@
         <h1 id="p-title"></h1>
         <div class="muted" id="p-sub"></div>
       </div>
+      <div class="project-actions"><span id="save-status" class="muted" role="status">All changes saved</span><button class="btn" id="duplicate" title="Copy this project to try another theme">Duplicate</button><button class="btn primary" id="run-all">Generate listing</button></div>
+    </header>
+    <details class="generation-settings">
+      <summary>Generation settings <span>Agents, language &amp; output</span></summary>
       <div class="run-bar">
         <label>Locale<select id="locale" aria-label="Preview locale"></select></label>
         <label>Translator<select id="translator" aria-label="Translation agent"></select></label>
@@ -39,18 +51,17 @@
         <label>Builder <select id="builder"></select></label>
         <label>Rounds <input id="rounds" type="number" min="1" max="4" value="1"></label>
         <label>Model <input id="model" placeholder="default" size="10"></label>
-        <button class="btn" id="duplicate" title="Copy this project to try another theme">Duplicate</button>
-        <button class="btn primary" id="run-all">▶ Generate</button>
       </div>
-    </header>
-
-    <nav class="tabs" id="tabs">
+    </details>
+    <div id="project-progress" class="project-progress" aria-label="Project progress"></div>
+    <nav class="tabs" id="tabs" aria-label="Listing workflow">
       <button data-tab="inputs" class="on">1 · Inputs</button>
       <button data-tab="plan">2 · Plan &amp; theme</button>
       <button data-tab="preview">3 · Preview &amp; edit</button>
       <button data-tab="export">4 · Export</button>
       <button data-tab="store">5 · Store preview</button>
     </nav>
+    <div class="section-intro"><div><h2 id="section-title">Start with your app.</h2><p id="section-description">Give your listing a story. Add app details and the screens you want to showcase.</p></div><span id="section-step">Step 1 of 5</span></div>
 
     <div class="tab" id="tab-inputs">
       <div class="cols">
@@ -61,7 +72,7 @@
         </div>
         <div class="stack">
           <div class="panel">
-            <h2>Screenshots <span class="hint">drop PNG/JPG — describe what each screen shows</span></h2>
+            <h2>Screenshots <span id="shot-count" class="pill"></span><span class="hint">Add a name and a short description for each screen.</span></h2>
             <div class="drop" data-kind="screenshots">Drop screenshots here or <label class="link">browse<input type="file" multiple accept="image/*" hidden></label></div>
             <div id="shots" class="shots"></div>
           </div>
@@ -141,7 +152,7 @@
   </div>
 </dialog>
 
-<div id="toast" class="toast" hidden></div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 <script type="module" src="app.js"></script>
 </body>
 </html>
