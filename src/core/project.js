@@ -110,3 +110,15 @@ export async function saveApp(name, app) {
   const p = projectPaths(name);
   await writeJson(p.app, { ...DEFAULT_APP, ...app });
 }
+
+/** Copy inputs, app.json and plan.json into a new project — the cheap way to try another theme. */
+export async function duplicateProject(name, to) {
+  const src = projectPaths(name);
+  const dst = projectPaths(to);
+  if (await exists(dst.app)) throw Object.assign(new Error(`Project "${to}" already exists`), { status: 409 });
+  await fs.mkdir(dst.dir, { recursive: true });
+  await fs.cp(path.join(src.dir, 'input'), path.join(dst.dir, 'input'), { recursive: true });
+  await fs.copyFile(src.app, dst.app);
+  if (await exists(src.plan)) await fs.copyFile(src.plan, dst.plan);
+  return loadProject(to);
+}

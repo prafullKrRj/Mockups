@@ -57,6 +57,7 @@ function setProject(p) {
   renderPlan();
   renderPreviews();
   renderExports();
+  renderStore();
 }
 
 // ---------- inputs ----------
@@ -151,7 +152,9 @@ function renderPlan() {
     v.errors.length ? `<div class="validation err"><b>Errors</b><ul>${v.errors.map((e) => `<li>${h(e)}</li>`).join('')}</ul></div>` : '',
     v.warnings.length ? `<div class="validation warn"><b>Warnings</b><ul>${v.warnings.map((e) => `<li>${h(e)}</li>`).join('')}</ul></div>` : '',
   ].join('') : '';
+  $('#theme-gallery').hidden = !plan;
   if (!plan) return;
+  renderGallery(plan.theme.preset);
   $('#plan-json').value = JSON.stringify(plan, null, 2);
   const t = plan.theme;
   const preset = state.meta.presets;
@@ -198,6 +201,24 @@ function renderPlan() {
     <label class="wide">Tagline<input name="headline" maxlength="44" value="${h(fg.headline)}"></label>
     <label class="wide">Badges (comma)<input name="badges" value="${h((fg.badges ?? []).join(', '))}"></label>
     ${[0, 1, 2].map((i) => `<label>Screenshot ${i + 1} ${sel(`fg${i}`, ['', ...shots], fg.screenshots[i] ?? '')}</label>`).join('')}`;
+}
+
+const SOOTHING = ['sage-mist', 'sand-dune', 'harbor-night', 'dusk-rose', 'fog-lilac', 'ocean-calm', 'clay-wellness'];
+
+function renderGallery(current) {
+  const presets = state.meta.presetData;
+  if (!$('#preset-fonts')) {
+    const fams = [...new Set(Object.values(presets).map((p) => `family=${p.fonts.headline.replace(/ /g, '+')}:wght@${p.fonts.headlineWeight}`))];
+    document.head.insertAdjacentHTML('beforeend', `<link id="preset-fonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?${fams.join('&')}&display=swap">`);
+  }
+  const order = [...SOOTHING, ...Object.keys(presets).filter((k) => !SOOTHING.includes(k))];
+  $('#theme-gallery').innerHTML = order.filter((k) => presets[k]).map((k) => {
+    const c = presets[k].colors;
+    return `<button class="swatch ${k === current ? 'on' : ''}" data-preset="${k}" style="background:linear-gradient(160deg, ${c.bg}, ${c.bg2});color:${c.text}">
+      <b style="font-family:'${presets[k].fonts.headline}',sans-serif;font-weight:${presets[k].fonts.headlineWeight}">Aa</b>
+      <span class="dots"><i style="background:${c.accent}"></i><i style="background:${c.accent2}"></i><i style="background:${c.text}"></i></span>
+      <small>${k}${SOOTHING.includes(k) ? ' · calm' : ''}</small></button>`;
+  }).join('');
 }
 
 const csv = (v) => v.split(',').map((s) => s.trim()).filter(Boolean);
@@ -287,6 +308,9 @@ function previewCard(e, scale) {
 
 function renderPreviews() {
   const deck = state.project.deck ?? [];
+  const refs = state.project.references;
+  $('#ref-strip').hidden = !refs.length;
+  $('#ref-strip').innerHTML = refs.length ? `<span class="muted">Reference</span>${refs.map((r) => `<img src="${files('input/reference', r.file)}" alt="">`).join('')}` : '';
   $('#previews').innerHTML = deck.length ? deck.map((e) => previewCard(e, e.kind === 'feature' ? 0.5 : 0.25)).join('') : '<div class="panel muted">Nothing rendered yet.</div>';
 }
 
@@ -312,6 +336,18 @@ function renderExports() {
   const fig = (kind, f, w) => `<figure><img src="${files(`export/${kind}`, f)}" style="width:${w}px" alt=""><figcaption><span>${h(f)}</span><a href="${files(`export/${kind}`, f)}" download="${h(f)}">download</a></figcaption></figure>`;
   $('#exports').innerHTML = [...exports.feature.map((f) => fig('feature', f, 512)), ...exports.phone.map((f) => fig('phone', f, 240))].join('') || '<div class="panel muted">No PNGs yet — export first.</div>';
   $('#zip-btn').href = `/api/projects/${encodeURIComponent(state.name)}/download.zip`;
+}
+
+function renderStore() {
+  const { app, exports, hasIcon } = state.project;
+  const fg = exports.feature[0];
+  $('#play').innerHTML = `
+    ${fg ? `<img class="fg" src="${files('export/feature', fg)}" alt="">` : '<div class="fg"></div>'}
+    <div class="head">${hasIcon ? `<img src="/files/${encodeURIComponent(state.name)}/input/icon.png?t=${state.bust}" alt="">` : '<div class="ph"></div>'}
+      <div><b>${h(app.name)}</b><small>${h(app.packageName || 'your developer name')}</small></div></div>
+    <div class="install">Install</div>
+    <div class="carousel">${exports.phone.map((f) => `<img src="${files('export/phone', f)}" alt="">`).join('') || '<span class="muted">Export to see screenshots</span>'}</div>
+    <div class="about"><b>About this app</b>${h(app.shortDescription || 'Add a short description in Inputs.')}</div>`;
 }
 
 // ---------- jobs ----------
@@ -392,6 +428,11 @@ async function init() {
     const name = new FormData(e.target).get('name');
     try { await api('/api/projects', { method: 'POST', body: { name } }); e.target.reset(); location.hash = name; } catch (err) { toast(err.message, true); }
   });
+  $('#duplicate').addEventListener('click', async () => {
+    const to = prompt('Name for the copy', `${state.name}-v2`);
+    if (!to) return;
+    try { await api(`/api/projects/${encodeURIComponent(state.name)}/duplicate`, { method: 'POST', body: { to } }); location.hash = to; toast(`Duplicated as ${to}`); } catch (e) { toast(e.message, true); }
+  });
   $('#save-app').addEventListener('click', () => saveApp().catch((e) => toast(e.message, true)));
   $('#shots').addEventListener('click', async (e) => {
     const kind = e.target.dataset.del;
@@ -421,6 +462,22 @@ async function init() {
     renderPlan();
   });
   $('#save-plan').addEventListener('click', savePlan);
+  // Picking a preset drops token overrides so the preset shows as designed; copy and layouts are kept.
+  $('#theme-gallery').addEventListener('click', (e) => {
+    const b = e.target.closest('.swatch');
+    if (!b) return;
+    state.plan = collectPlan();
+    state.plan.theme = { preset: b.dataset.preset, ...(state.plan.theme.referenceNotes ? { referenceNotes: state.plan.theme.referenceNotes } : {}) };
+    renderPlan();
+    savePlan();
+  });
+  window.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+      e.preventDefault();
+      if (state.tab === 'inputs') saveApp().catch((err) => toast(err.message, true));
+      else if (state.plan) savePlan();
+    }
+  });
   $('#add-slide').addEventListener('click', () => {
     state.plan = collectPlan();
     const n = state.plan.slides.length + 1;

@@ -37,6 +37,7 @@
         <label>Builder <select id="builder"></select></label>
         <label>Rounds <input id="rounds" type="number" min="1" max="4" value="1"></label>
         <label>Model <input id="model" placeholder="default" size="10"></label>
+        <button class="btn" id="duplicate" title="Copy this project to try another theme">Duplicate</button>
         <button class="btn primary" id="run-all">▶ Generate</button>
       </div>
     </header>
@@ -46,6 +47,7 @@
       <button data-tab="plan">2 · Plan &amp; theme</button>
       <button data-tab="preview">3 · Preview &amp; edit</button>
       <button data-tab="export">4 · Export</button>
+      <button data-tab="store">5 · Store preview</button>
     </nav>
 
     <div class="tab" id="tab-inputs">
@@ -84,6 +86,7 @@
         <span id="plan-status" class="muted"></span>
       </div>
       <div id="plan-validation"></div>
+      <div id="theme-gallery" class="theme-gallery" hidden></div>
       <div id="plan-empty" class="panel muted">No plan yet. Run <b>Generate</b>, or make a quick plan.</div>
       <div id="plan-editor" class="cols" hidden>
         <div class="panel"><h2>Theme</h2><div id="theme-form" class="form"></div></div>
@@ -101,6 +104,7 @@
         <button class="btn primary" id="export-now">Export PNGs</button>
         <span class="muted">Click a slide to edit its HTML. Edited slides become <b>custom</b> and survive re-renders.</span>
       </div>
+      <div id="ref-strip" class="ref-strip" hidden></div>
       <div id="previews" class="previews"></div>
     </div>
 
@@ -111,6 +115,10 @@
         <a class="btn" id="zip-btn" href="#">⬇ Download all (zip)</a>
       </div>
       <div id="exports" class="exports"></div>
+    </div>
+    <div class="tab" id="tab-store" hidden>
+      <p class="muted">How the listing reads on a phone. Screenshots appear at the size Play shows them; if a headline is hard to read here, shorten it.</p>
+      <div class="play" id="play"></div>
     </div>
   </section>
 </main>
