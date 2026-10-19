@@ -163,7 +163,8 @@ body{position:relative;background:${backgroundCss(theme, c)};color:${c.text};fon
 h1{flex:none;padding-block:.05em;font-family:'${theme.fonts.headline}',system-ui,sans-serif;font-weight:${theme.fonts.headlineWeight};font-size:var(--hs,112px);line-height:1.04;letter-spacing:-.025em;${theme.headlineCase === 'upper' ? 'text-transform:uppercase;letter-spacing:-.01em;line-height:.98;' : ''}overflow:hidden;overflow-wrap:break-word;text-wrap:balance}
 h1 .hl{font-style:normal;${hl}}
 .sub{flex:none;font-size:42px;line-height:1.32;font-weight:500;color:${c.muted};max-width:900px;overflow:hidden;text-wrap:pretty}
-.badges{display:flex;gap:16px;flex-wrap:wrap;justify-content:inherit}
+.badges{display:flex;gap:16px;flex-wrap:wrap;justify-content:flex-start}
+.text.center .badges{justify-content:center}
 .badge{font-size:30px;font-weight:600;padding:14px 28px;border-radius:999px;background:${rgba(c.surface, 0.9)};color:${c.surfaceText};box-shadow:0 10px 30px -12px ${rgba('#000000', 0.25)}}
 .icon{border-radius:22%;box-shadow:0 18px 40px -16px ${rgba('#000000', 0.45)};object-fit:cover}
 .icon.letter{display:flex;align-items:center;justify-content:center;font-family:'${theme.fonts.headline}',sans-serif;font-weight:800}
