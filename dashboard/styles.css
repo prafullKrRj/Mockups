@@ -134,10 +134,14 @@ input[type=color] { padding: 2px; width: 44px; height: 34px; }
 .ref-strip { display: flex; gap: 10px; align-items: center; overflow-x: auto; margin-bottom: 16px; padding: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
 .ref-strip img { height: 120px; border-radius: 6px; }
 @media (max-width: 760px) {
-  body { grid-template-columns: 1fr; font-size: 15px; }
+  body { grid-template-columns: minmax(0, 1fr); font-size: 15px; }
+  .sidebar, main, .panel, .stack { min-width: 0; }
+  input, select, textarea { max-width: 100%; min-width: 0; }
+  #p-sub { overflow-wrap: anywhere; }
+  .run-bar label > * { width: 100%; }
   .sidebar { position: static; height: auto; padding: 14px 16px; gap: 10px; }
   .project-list { flex-direction: row; overflow-x: auto; flex: none; }
-  .project-list a { flex: none; }
+  .project-list a { flex: none; gap: 14px; }
   .sidebar-foot { display: none; }
   main { padding: 16px 14px 110px; }
   .project-head { align-items: stretch; }
@@ -145,7 +149,7 @@ input[type=color] { padding: 2px; width: 44px; height: 34px; }
   .run-bar .btn { justify-content: center; }
   .tabs { overflow-x: auto; }
   .tabs button { flex: none; }
-  .form { grid-template-columns: 1fr; }
+  .form, .cols { grid-template-columns: minmax(0, 1fr); }
   .shot { grid-template-columns: 56px 1fr auto; }
   .shot img { width: 56px; }
   .previews { gap: 14px; }
