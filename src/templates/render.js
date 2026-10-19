@@ -130,10 +130,12 @@ function fontLinks(theme) {
 
 function baseCss(theme, c) {
   const hlStyle = theme.highlightStyle === 'color' && contrast(c.accent, c.bg) < 3 ? 'underline' : theme.highlightStyle;
+  // A saturated marker behind dark text is unreadable; fall back to a translucent tint of the accent.
+  const markerFill = contrast(c.text, c.accent) >= 4.5 ? rgba(c.accent, 0.9) : rgba(c.accent, 0.28);
   const hl = {
     color: `color:${c.accent};`,
     gradient: `background:linear-gradient(95deg, ${c.accent}, ${c.accent2});-webkit-background-clip:text;background-clip:text;color:transparent;padding-right:.04em;`,
-    marker: `background:linear-gradient(transparent 56%, ${rgba(c.accent, 0.9)} 56%, ${rgba(c.accent, 0.9)} 94%, transparent 94%);padding:0 .06em;-webkit-box-decoration-break:clone;box-decoration-break:clone;`,
+    marker: `background:linear-gradient(transparent 56%, ${markerFill} 56%, ${markerFill} 94%, transparent 94%);padding:0 .06em;-webkit-box-decoration-break:clone;box-decoration-break:clone;`,
     underline: `text-decoration:underline;text-decoration-color:${c.accent};text-decoration-thickness:.09em;text-underline-offset:.12em;`,
     none: '',
   }[hlStyle] ?? '';
