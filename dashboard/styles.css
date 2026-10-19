@@ -67,6 +67,11 @@ input[type=color] { padding: 2px; width: 44px; height: 34px; }
 .btn.tiny { padding: 3px 9px; font-size: 12px; }
 .btn.danger { color: var(--err); }
 .btn:disabled { opacity: .5; cursor: progress; }
+.btn[aria-disabled=true] { opacity: .45; cursor: not-allowed; }
+.btn:disabled[title] { cursor: not-allowed; }
+.empty-panel { width: 100%; padding: 40px; text-align: center; border-style: dashed; }
+.empty-panel h2 { justify-content: center; margin-bottom: 8px; font-size: 20px; }
+.empty-panel p { color: var(--muted); max-width: 420px; margin: auto; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .sidebar :focus-visible { outline-color: #d4e8b8; }
 .tabs button:hover { color: var(--accent); background: #eaf0e6; }
@@ -132,6 +137,9 @@ input[type=color] { padding: 2px; width: 44px; height: 34px; }
 .exports a { color: var(--accent-2); }
 .log-drawer { position: fixed; right: 18px; bottom: 18px; width: min(720px, calc(100vw - 280px)); max-height: 46vh; background: #173526; color: #edf5e9; border: 1px solid #51725a; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 16px 48px #193c2d33; z-index: 20; }
 .log-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.log-head .pill { background: #e7eddf; color: #173526; }
+.log-head .pill.err { background: #ffe0d9; color: #9c302a; }
+.log-head .pill.warn { background: #f7eac8; color: #775219; }
 .spacer { flex: 1; }
 #log { margin: 0; padding: 12px 14px; overflow: auto; font: 12px/1.55 ui-monospace, Menlo, monospace; white-space: pre-wrap; word-break: break-word; }
 #log .stage { color: #6fd3ff; font-weight: 700; }
@@ -151,6 +159,7 @@ input[type=color] { padding: 2px; width: 44px; height: 34px; }
 @media (max-width: 1100px) { .cols { grid-template-columns: 1fr; } }
 
 .theme-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.theme-more { grid-column: 1 / -1; justify-self: start; font-size: 12px; }
 .swatch { border: 2px solid transparent; border-radius: 14px; padding: 14px; cursor: pointer; text-align: left; min-height: 110px; display: flex; flex-direction: column; justify-content: space-between; font: inherit; }
 .swatch:hover { transform: translateY(-1px); }
 .swatch.on { border-color: var(--accent-2); box-shadow: 0 0 0 3px #22644733; }

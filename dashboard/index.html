@@ -40,7 +40,7 @@
         <h1 id="p-title"></h1>
         <div class="muted" id="p-sub"></div>
       </div>
-      <div class="project-actions"><span id="save-status" class="muted" role="status">All changes saved</span><button class="btn" id="duplicate" title="Copy this project to try another theme">Duplicate</button><button class="btn primary" id="run-all">Generate listing</button></div>
+      <div class="project-actions"><span id="save-status" class="muted" role="status">All changes saved</span><button class="btn" id="job-activity" hidden>Activity</button><button class="btn" id="duplicate" title="Copy this project to try another theme">Duplicate</button><button class="btn primary" id="run-all">Generate listing</button></div>
     </header>
     <details class="generation-settings">
       <summary>Generation settings <span>Agents, language &amp; output</span></summary>
@@ -108,7 +108,7 @@
           <div class="panel"><h2>Feature graphic</h2><div id="fg-form" class="form"></div></div>
         </div>
       </div>
-      <textarea id="plan-json" class="code" hidden spellcheck="false"></textarea>
+      <textarea id="plan-json" class="code" aria-label="Plan JSON" hidden spellcheck="false"></textarea>
     </div>
 
     <div class="tab" id="tab-preview" hidden>
@@ -137,18 +137,18 @@
 </main>
 
 <div id="log-drawer" class="log-drawer" hidden>
-  <div class="log-head"><b id="log-title">Job</b><span id="log-status" class="pill"></span><span class="spacer"></span><button class="btn tiny" id="log-cancel">Cancel</button><button class="btn tiny" id="log-close">×</button></div>
+  <div class="log-head"><b id="log-title">Job</b><span id="log-status" class="pill" role="status"></span><span class="spacer"></span><button class="btn tiny" id="log-cancel">Cancel</button><button class="btn tiny" id="log-close" aria-label="Hide activity">×</button></div>
   <pre id="log"></pre>
 </div>
 
-<dialog id="slide-dialog" class="slide-dialog">
+<dialog id="slide-dialog" class="slide-dialog" aria-labelledby="dlg-title">
   <div class="dialog-head"><b id="dlg-title"></b><span class="spacer"></span>
     <button class="btn" id="dlg-reset">Reset to template</button>
     <button class="btn primary" id="dlg-save">Save HTML</button>
     <button class="btn" id="dlg-close">Close</button></div>
   <div class="dialog-body">
     <div class="dlg-preview"><iframe id="dlg-frame" title="slide preview"></iframe></div>
-    <textarea id="dlg-code" class="code" spellcheck="false"></textarea>
+    <textarea id="dlg-code" class="code" aria-label="Slide HTML" spellcheck="false"></textarea>
   </div>
 </dialog>
 

@@ -109,14 +109,13 @@ function setProject(p) {
   $('#workspace-name').textContent = p.name;
   $('#p-sub').textContent = `projects/${p.name} · ${p.screenshots.length} screenshots · ${p.references.length} reference · ${p.plan ? `plan by ${p.plan.generatedBy ?? 'hand'}` : 'no plan'}`;
   $('#shot-count').textContent = p.screenshots.length;
-  const progress = [[p.screenshots.length, `${p.screenshots.length} screenshots`], [p.plan, 'Plan ready'], [p.deck?.length, 'Previews built'], [exportsForLocale().phone.length, 'PNGs exported']];
-  $('#project-progress').innerHTML = progress.map(([done, label]) => `<span class="${done ? 'done' : ''}">${done ? '✓' : '○'} ${h(label)}</span>`).join('');
   renderInputs(appDraft ?? p.app);
   renderPlan();
   if (rawDraft !== null) $('#plan-json').value = rawDraft;
   renderPreviews();
   renderExports();
   renderStore();
+  updateJobControls();
   updateSaveStatus();
 }
 
@@ -210,7 +209,7 @@ async function saveApp(quiet = false) {
     if (revision === state.appRevision) state.appDirty = false;
     setProject(project);
     if (!quiet) toast('App info saved');
-  } finally { state.saving--; $('#save-app').disabled = false; updateSaveStatus(); }
+  } finally { state.saving--; $('#save-app').disabled = false; updateJobControls(); updateSaveStatus(); }
 }
 
 async function uploadFiles(kind, list) {
@@ -288,7 +287,7 @@ function renderPlan() {
   renderCounters($('#plan-editor'));
 }
 
-const SOOTHING = ['sage-mist', 'sand-dune', 'harbor-night', 'dusk-rose', 'fog-lilac', 'ocean-calm', 'clay-wellness'];
+const SOOTHING = ['sage-mist', 'sand-dune', 'harbor-night', 'dusk-rose', 'ocean-calm', 'clay-wellness'];
 
 function renderGallery(current) {
   const presets = state.meta.presetData;
@@ -297,13 +296,13 @@ function renderGallery(current) {
     document.head.insertAdjacentHTML('beforeend', `<link id="preset-fonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?${fams.join('&')}&display=swap">`);
   }
   const order = [...SOOTHING, ...Object.keys(presets).filter((k) => !SOOTHING.includes(k))];
-  $('#theme-gallery').innerHTML = order.filter((k) => presets[k]).map((k) => {
+  $('#theme-gallery').innerHTML = order.filter((k) => presets[k] && (state.allThemes || SOOTHING.includes(k) || k === current)).map((k) => {
     const c = presets[k].colors;
     return `<button class="swatch ${k === current ? 'on' : ''}" data-preset="${k}" style="background:linear-gradient(160deg, ${c.bg}, ${c.bg2});color:${c.text}">
       <b style="font-family:'${presets[k].fonts.headline}',sans-serif;font-weight:${presets[k].fonts.headlineWeight}">Aa</b>
       <span class="dots"><i style="background:${c.accent}"></i><i style="background:${c.accent2}"></i><i style="background:${c.text}"></i></span>
       <small>${k}${SOOTHING.includes(k) ? ' · calm' : ''}</small></button>`;
-  }).join('');
+  }).join('') + `<button class="btn theme-more" data-all-themes aria-expanded="${!!state.allThemes}">${state.allThemes ? 'Show curated themes' : `Browse all ${Object.keys(presets).length} themes`}</button>`;
 }
 
 const listText = (value) => copy(value ?? []).join(', ').replace(/(?:,\s*)+$/, '');
@@ -382,11 +381,12 @@ async function savePlan() {
     setProject(project);
     $('#plan-status').textContent = 'Saved and re-rendered. Export to refresh PNGs.';
     toast('Plan saved');
+    return true;
   } catch (e) {
     $('#plan-status').textContent = '';
     const d = e.details;
     toast(d?.errors ? `Invalid plan: ${d.errors[0]}` : e.message, true);
-  } finally { state.saving--; $('#save-plan').disabled = false; updateSaveStatus(); }
+  } finally { state.saving--; updateJobControls(); updateSaveStatus(); }
 }
 
 // ---------- previews ----------
@@ -409,7 +409,7 @@ function renderPreviews() {
   const refs = state.project.references;
   $('#ref-strip').hidden = !refs.length;
   $('#ref-strip').innerHTML = refs.length ? `<span class="muted">Reference</span>${refs.map((r) => `<img src="${files('input/reference', r.file)}" alt="">`).join('')}` : '';
-  $('#previews').innerHTML = deck.length ? deck.map((e) => previewCard(e, e.kind === 'feature' ? 0.5 : 0.25)).join('') : '<div class="panel muted">Nothing rendered yet.</div>';
+  $('#previews').innerHTML = deck.length ? deck.map((e) => previewCard(e, e.kind === 'feature' ? 0.5 : 0.25)).join('') : '<div class="panel empty-panel"><h2>Your story starts with a plan.</h2><p>Upload screenshots in Inputs, then create a quick plan in Plan &amp; theme to see your first previews.</p></div>';
 }
 
 async function openSlide(id) {
@@ -433,8 +433,11 @@ async function openSlide(id) {
 function renderExports() {
   const exports = exportsForLocale();
   const fig = (kind, f, w) => `<figure><img src="${files(exportKind(kind), f)}" style="width:${w}px" alt=""><figcaption><span>${h(f)}</span><a href="${files(exportKind(kind), f)}" download="${h(f)}">download</a></figcaption></figure>`;
-  $('#exports').innerHTML = [...exports.feature.map((f) => fig('feature', f, 512)), ...exports.phone.map((f) => fig('phone', f, 240))].join('') || '<div class="panel muted">No PNGs yet — export first.</div>';
+  $('#exports').innerHTML = [...exports.feature.map((f) => fig('feature', f, 512)), ...exports.phone.map((f) => fig('phone', f, 240))].join('') || '<div class="panel empty-panel"><h2>Your launch assets will live here.</h2><p>Build a plan, review your previews, then export PNGs. Download individual images or the complete ZIP.</p></div>';
   $('#zip-btn').href = `/api/projects/${encodeURIComponent(state.name)}/download.zip`;
+  $('#zip-btn').setAttribute('aria-disabled', String(!exports.phone.length && !exports.feature.length));
+  const progress = [[state.project.screenshots.length, `${state.project.screenshots.length} screenshots`], [state.project.plan, 'Plan ready'], [state.project.deck?.some((e) => e.locale === state.locale), 'Previews built'], [exports.phone.length, 'PNGs exported']];
+  $('#project-progress').innerHTML = progress.map(([done, label]) => `<span class="${done ? 'done' : ''}">${done ? '✓' : '○'} ${h(label)}</span>`).join('');
 }
 
 function renderStore() {
@@ -451,7 +454,20 @@ function renderStore() {
 }
 
 // ---------- jobs ----------
-function attachJob(id, title) {
+function updateJobControls() {
+  if (!state.project) return;
+  $('#toggle-json').disabled = !state.plan;
+  $('#save-plan').disabled = !state.plan || !!state.saving;
+  const busy = !!state.job || state.starting;
+  for (const id of ['run-all', 'plan-agent', 'plan-heuristic', 'export-now', 'export-btn']) {
+    const missing = id.startsWith('export') ? !state.project.deck?.some((e) => e.locale === state.locale) : !state.project.screenshots.length;
+    $(`#${id}`).disabled = busy || missing;
+    $(`#${id}`).title = busy ? 'Wait for the current job to finish' : missing ? id.startsWith('export') ? 'Create a plan to build previews first' : 'Upload a screenshot first' : '';
+  }
+  $('#log-cancel').disabled = !state.job;
+}
+
+function attachJob(id, title, name) {
   state.job = id;
   const drawer = $('#log-drawer');
   drawer.hidden = false;
@@ -459,16 +475,20 @@ function attachJob(id, title) {
   $('#log-title').textContent = title;
   $('#log-status').textContent = 'running';
   $('#log-status').className = 'pill warn';
-  $('#run-all').disabled = true;
+  $('#job-activity').hidden = false;
+  updateJobControls();
   const es = new EventSource(`/api/jobs/${id}/stream`);
+  es.onopen = () => { $('#log-status').textContent = 'running'; };
+  es.onerror = () => { if (state.job === id) $('#log-status').textContent = 'reconnecting…'; };
   es.onmessage = async (m) => {
     const ev = JSON.parse(m.data);
     if (ev.level === 'end') {
       es.close();
-      $('#run-all').disabled = false;
+      state.job = null;
+      updateJobControls();
       $('#log-status').textContent = ev.msg;
       $('#log-status').className = `pill ${ev.msg === 'done' ? 'ok' : 'err'}`;
-      await openProject(state.name);
+      try { if (state.name === name) await openProject(name); else await loadProjects(); } catch (e) { toast(e.message, true); }
       return;
     }
     const line = document.createElement('div');
@@ -480,18 +500,29 @@ function attachJob(id, title) {
 }
 
 async function run(body, title) {
+  if (state.job || state.starting) return;
+  const name = state.name;
+  state.starting = true;
+  updateJobControls();
   try {
     if (state.tab === 'inputs') await saveApp(true);
-    const { id } = await api(`/api/projects/${encodeURIComponent(state.name)}/run`, { method: 'POST', body });
-    attachJob(id, title);
+    if (name !== state.name) return;
+    const { id } = await api(`/api/projects/${encodeURIComponent(name)}/run`, { method: 'POST', body });
+    attachJob(id, title, name);
   } catch (e) { toast(e.message, true); }
+  finally { state.starting = false; updateJobControls(); }
 }
 
 async function exportPngs() {
+  if (state.job || state.starting) return;
+  const name = state.name;
+  state.starting = true;
+  updateJobControls();
   try {
-    const { id } = await api(`/api/projects/${encodeURIComponent(state.name)}/export`, { method: 'POST', body: { scale: Number($('#scale').value) } });
-    attachJob(id, 'Export');
+    const { id } = await api(`/api/projects/${encodeURIComponent(name)}/export`, { method: 'POST', body: { scale: Number($('#scale').value) } });
+    attachJob(id, 'Export', name);
   } catch (e) { toast(e.message, true); }
+  finally { state.starting = false; updateJobControls(); }
 }
 
 // ---------- wiring ----------
@@ -573,7 +604,7 @@ async function init() {
     try {
       if (state.plan) state.plan = collectPlan();
       state.locale = $('#locale').value;
-      renderPlan(); renderPreviews(); renderExports(); renderStore();
+      renderPlan(); renderPreviews(); renderExports(); renderStore(); updateJobControls();
     } catch (e) { $('#locale').value = state.locale; toast(e.message, true); }
   });
   $('#save-app').addEventListener('click', () => saveApp().catch((e) => toast(e.message, true)));
@@ -596,17 +627,21 @@ async function init() {
   $('#plan-heuristic').addEventListener('click', async () => {
     try { setProject(await api(`/api/projects/${encodeURIComponent(state.name)}/plan/heuristic`, { method: 'POST' })); toast('Quick plan created'); } catch (e) { toast(e.message, true); }
   });
-  $('#toggle-json').addEventListener('click', () => {
+  $('#toggle-json').addEventListener('click', async () => {
     const json = $('#plan-json');
     if (json.hidden) json.value = JSON.stringify(collectPlan(), null, 2);
-    else { try { state.plan = JSON.parse(json.value); } catch (e) { return toast(`Invalid JSON: ${e.message}`, true); } }
+    else {
+      const revision = state.planRevision;
+      if (!await savePlan() || revision !== state.planRevision) return;
+    }
     json.hidden = !json.hidden;
-    $('#toggle-json').textContent = json.hidden ? 'Edit raw JSON' : 'Back to form';
+    $('#toggle-json').textContent = json.hidden ? 'Edit raw JSON' : 'Save & return to form';
     renderPlan();
   });
   $('#save-plan').addEventListener('click', savePlan);
   // Picking a preset drops token overrides so the preset shows as designed; copy and layouts are kept.
   $('#theme-gallery').addEventListener('click', (e) => {
+    if (e.target.hasAttribute('data-all-themes')) { state.allThemes = !state.allThemes; renderGallery(state.plan.theme.preset); return; }
     const b = e.target.closest('.swatch');
     if (!b) return;
     state.plan = collectPlan();
@@ -624,6 +659,7 @@ async function init() {
     }
   });
   $('#add-slide').addEventListener('click', () => {
+    if (!state.project.screenshots.length) return toast('Upload a screenshot in Inputs before adding a slide', true);
     state.plan = collectPlan();
     const n = state.plan.slides.length + 1;
     if (n > 8) return toast('Google Play allows at most 8 phone screenshots', true);
@@ -653,6 +689,7 @@ async function init() {
   $('#refresh-preview').addEventListener('click', () => openProject(state.name));
   $('#export-now').addEventListener('click', exportPngs);
   $('#export-btn').addEventListener('click', exportPngs);
+  $('#zip-btn').addEventListener('click', (e) => { if (e.currentTarget.getAttribute('aria-disabled') === 'true') e.preventDefault(); });
   $('#dlg-close').addEventListener('click', () => $('#slide-dialog').close());
   $('#dlg-save').addEventListener('click', async () => {
     const id = $('#slide-dialog').dataset.id;
@@ -669,7 +706,8 @@ async function init() {
     toast('Reset to template');
   });
   $('#log-close').addEventListener('click', () => ($('#log-drawer').hidden = true));
-  $('#log-cancel').addEventListener('click', () => state.job && api(`/api/jobs/${state.job}/cancel`, { method: 'POST' }));
+  $('#job-activity').addEventListener('click', () => ($('#log-drawer').hidden = false));
+  $('#log-cancel').addEventListener('click', () => { if (state.job) api(`/api/jobs/${state.job}/cancel`, { method: 'POST' }).catch((e) => toast(e.message, true)); });
 
   window.addEventListener('hashchange', () => location.hash.length > 1 && openProject(decodeURIComponent(location.hash.slice(1))).catch((e) => toast(e.message, true)));
   await loadProjects();

@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node --test test/",
+    "test:dashboard": "node scripts/verify-dashboard.js",
     "start": "node src/cli.js serve",
     "mockup": "node src/cli.js",
     "demo": "node scripts/make-demo.js && node src/cli.js run demo --steps build,export"
