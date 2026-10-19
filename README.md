@@ -6,32 +6,63 @@ HTML, and a builder agent reviews and refines it. The output is Play-ready PNGs 
 graphic. Guardrails check every step, and a local dashboard lets you edit anything by hand.
 
 
-![SubTrack — midnight-glow deck](samples/subtrack/deck.png)
-![SubTrack feature graphic](samples/subtrack/feature-graphic.png)
+![SubTrack deck by Claude](samples/subtrack-claude/deck.png)
+![SubTrack feature graphic](samples/subtrack-claude/feature-graphic.png)
 
 ---
 
 ## Samples
 
-All of these were generated from the same 8 raw screenshots of [SubTrack](samples/subtrack/app.json), a subscription
-tracker. Each folder has `deck.png`, `feature-graphic.png`, half-size `slides/`, plus the `plan.json` and `app.json`
+Every SubTrack deck below started from the same 8 raw screenshots and [`app.json`](samples/subtrack-claude/app.json).
+Each sample folder has `deck.png`, `feature-graphic.png`, half-size `slides/`, and the `plan.json` and `app.json`
 that produced it.
 
-| Sample | How it was made |
+### The same app, three agents
+
+Each agent picked its own calm direction with the same skills, and all slides pass the guardrails.
+
+| Agent | Result |
 |---|---|
-| [`samples/subtrack`](samples/subtrack) | `--planner claude --builder claude`. The agent picked **midnight-glow** to match the app's dark Material 3 UI and wrote all the copy. |
-| [`samples/subtrack-light`](samples/subtrack-light) | Same plan with the theme switched to **aurora-light** in the dashboard. No AI, takes seconds. |
-| [`samples/subtrack-ref`](samples/subtrack-ref) | **Theme replication.** A sample listing went into `input/reference/`, and the agents copied its look onto SubTrack. |
-| [`samples/demo`](samples/demo) | Synthetic finance app (`npm run demo`) for trying the pipeline with no screenshots of your own. |
+| **Claude Code** chose `harbor-night`, highlights on 4 of 7 slides | ![](samples/subtrack-claude/deck.png) |
+| **Codex** chose a condensed grotesk, one highlight, and a custom stats zoom card | ![](samples/subtrack-codex/deck.png) |
+| **Muse** chose `fog-lilac`, a light take that inverts the dark UI | ![](samples/subtrack-muse/deck.png) |
 
-**aurora-light**
-![SubTrack light](samples/subtrack-light/deck.png)
+### Copy a look from a reference
 
-**Reference replication** (left: reference given to the agent · right: result)
-<p>
-<img src="samples/subtrack-ref/reference.png" width="49%">
-<img src="samples/subtrack-ref/deck.png" width="49%">
-</p>
+Drop any sample listing into `input/reference/` and the agents reproduce its style on your screenshots. Left is the
+reference, right is the result:
+
+<p><img src="samples/subtrack-ref/reference.png" width="49%"> <img src="samples/subtrack-ref/deck.png" width="49%"></p>
+
+### Calm presets
+
+Five soothing presets join the expressive ones. Here is one plan rendered in each, with no AI and a few seconds per
+deck: `sage-mist`, `sand-dune`, `harbor-night`, `dusk-rose`, `fog-lilac`.
+
+![Calm presets](samples/themes.png)
+
+### Mockup Studio, listed by Mockup Studio
+
+The dashboard was captured at phone size (`scripts/capture-dashboard.js`) and fed back in as an app. The Claude SubTrack
+deck was given as the reference, so the tool designed its own listing in the same family:
+
+<p><img src="samples/mockup-studio/reference.png" width="49%"> <img src="samples/mockup-studio/deck.png" width="49%"></p>
+
+![Mockup Studio feature graphic](samples/mockup-studio/feature-graphic.png)
+
+---
+
+## Dashboard tour
+
+| | |
+|---|---|
+| **Inputs**: app info and per-screen descriptions<br>![](samples/dashboard/01-inputs.png) | **Theme gallery**: one click per preset, live warnings<br>![](samples/dashboard/02-theme-gallery.png) |
+| **Slide editor**: layout, screenshots and copy per slide<br>![](samples/dashboard/03-slide-editor.png) | **Previews** with a QA badge on every slide<br>![](samples/dashboard/04-previews.png) |
+| **HTML editor**: hand edits survive re-renders<br>![](samples/dashboard/05-html-editor.png) | **Export**: PNGs at 1×, 1.5× or 2×, plus a zip<br>![](samples/dashboard/06-export.png) |
+| **Store preview**: the deck at real Play thumbnail size<br>![](samples/dashboard/07-store-preview.png) | **Generate log**: the agent pipeline, live<br>![](samples/dashboard/08-generate-log.png) |
+
+The dashboard also has **Duplicate** (try a variant theme on a copy), **⌘/Ctrl + S** to save, a reference strip next
+to the previews, and a phone-friendly layout.
 
 ---
 
@@ -115,8 +146,10 @@ are needed.
 | [`design-system.md`](skills/design-system.md) | both | Canvas, layouts, theme tokens, preset-by-category table |
 | [`theme-replication.md`](skills/theme-replication.md) | both, if references exist | Reading a reference deck like a designer and mapping it to tokens |
 | [`guardrails.md`](skills/guardrails.md) | both | The rules code enforces, and which files each agent may touch |
+| [`visual-craft.md`](skills/visual-craft.md) | both | Avoiding generated-looking design: calm palettes, restraint, and the tells to avoid |
+| [`vendor/frontend-design/`](skills/vendor/frontend-design/SKILL.md) | both | General design-direction skill (Apache-2.0), inlined into prompts |
 
-The plan contract is [`schemas/plan.schema.json`](schemas/plan.schema.json).
+Copy and theme warnings from the validator are passed back to the agents. The plan contract is [`schemas/plan.schema.json`](schemas/plan.schema.json).
 
 ### Agents (`config/agents.json`)
 
@@ -138,11 +171,12 @@ agents, for example `--planner codex --builder claude`. Use `--model <id>` to pi
 
 1. **Inputs**: app info form, drag-and-drop screenshots with per-screen title, description and priority, reference
    images, icon.
-2. **Plan & theme**: every theme token and every slide field as a form, or raw JSON. Add, reorder or delete slides.
+2. **Plan & theme**: a one-click theme gallery, then every theme token and every slide field as a form, or raw JSON. Add, reorder or delete slides.
    Live validation. *Quick plan (no AI)* builds an instant draft.
 3. **Preview & edit**: live HTML previews with QA status. Click a slide to edit its HTML in place. Edited slides become
    `custom` and survive re-renders. *Reset to template* undoes this.
 4. **Export**: 1× / 1.5× / 2× PNGs, per-file download, or a zip of everything.
+5. **Store preview**: a Google Play listing mock-up with your feature graphic, icon and screenshots at real size.
 
 **Generate** runs the whole pipeline with the planner and builder you choose, and streams logs live.
 
@@ -164,14 +198,33 @@ Projects live in `projects/` (git-ignored except the demo). Set `MOCKUP_PROJECTS
 
 ## Themes & layouts
 
-**Presets:** `aurora-light` · `midnight-glow` · `bold-gradient` · `swiss-paper` · `clay-wellness` · `neon-night` ·
-`editorial-serif` · `candy-pop` · `ocean-calm` · `mono-minimal`. Any token can be overridden, and any Google Font
-works.
+**Calm presets (category defaults):** `sage-mist` · `sand-dune` · `harbor-night` · `dusk-rose` · `fog-lilac` ·
+`ocean-calm` · `clay-wellness`.
+**Expressive presets:** `aurora-light` · `midnight-glow` · `bold-gradient` · `swiss-paper` · `neon-night` ·
+`editorial-serif` · `candy-pop` · `mono-minimal`. Any token can be overridden, and any Google Font works.
 
 **Phone layouts:** `hero` · `device-bottom` · `device-top` · `tilted` · `two-devices` · `callouts` · `zoom` (magnified
 detail card) · `closer` (icon + badges).
 
 **Feature graphic:** `fg-split` · `fg-centered` · `fg-fan`.
+
+## Less AI slop, by design
+
+Generated decks tend to look the same: purple gradients, an all-caps label above every headline, one highlighted word
+per slide, identical grey shadows. Mockup Studio pushes against this in three places:
+
+1. **Skills:** `visual-craft.md` tells agents to derive the palette from the app's own UI, write a one-line design
+   direction, check it against "would I make this for any app?", and spend their boldness in one place only.
+2. **Renderer:** calm presets are the category defaults, eyebrows are sentence case, and shadows are tinted from the
+   background.
+3. **Validator:** it warns when every slide has an eyebrow, when more than half the slides have highlights, when copy
+   contains middle dots or arrows, and when there are more than two decor items. Agents see these warnings and fix
+   them.
+
+## Roadmap
+
+[`Mockups-V2.MD`](Mockups-V2.MD) is a self-contained spec for the next round of work (localisation, tablet decks, a
+vision critic stage, history/undo, a canvas editor, promo video, CI and Docker). Hand it to a coding agent.
 
 ## License
 
