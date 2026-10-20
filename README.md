@@ -91,9 +91,10 @@ node src/cli.js new myapp
 
 1. **Screenshots** → `projects/myapp/input/screenshots/`. Use raw captures (PNG/JPG). Name them in rough story order
    (`01-home.png`, …).
-2. **App info** → `projects/myapp/app.json`. See [`samples/subtrack-claude/app.json`](samples/subtrack-claude/app.json). The most
-   important part is `screens`: for each file, say what it shows (`title`, `description`) and give it a `priority`
-   (higher means earlier in the deck).
+2. **App info** → the dashboard's Inputs tab, `PUT /api/projects/myapp/app`, or `mockup restore` of a dump. It is
+   stored in SQLite; see [`samples/subtrack-claude/app.json`](samples/subtrack-claude/app.json) for its shape. The
+   most important part is `screens`: for each file, say what it shows (`title`, `description`) and give it a
+   `priority` (higher means earlier in the deck).
 3. *Optional:* put a **sample listing whose look you want** in `input/reference/` (one or more images), and your
    **icon** at `input/icon.png`.
 4. Generate:
@@ -210,15 +211,31 @@ at 1440, 768, 390 and 320 pixels. No agent CLI or AI credentials are needed; exi
 node src/cli.js new <project>
 node src/cli.js run <project> [--planner heuristic|claude|codex|muse] [--builder template|claude|codex|muse]
                               [--rounds n] [--translator claude|codex|muse] [--steps plan,translate,build,export] [--model id] [--scale 1|1.5|2]
-node src/cli.js build <project>        # re-render HTML from plan.json (keeps custom slides)
+node src/cli.js build <project>        # re-render HTML from the current plan (keeps custom slides)
 node src/cli.js export <project>       # PNGs + QA
 node src/cli.js validate <project>
 node src/cli.js serve [--port 4280]
+node src/cli.js list [--app <id>]      # projects, their app, label and plan version
+node src/cli.js apps                   # apps with project / plan-version / run counts
+node src/cli.js group theme            # projects grouped by app | theme | generatedBy | category
+node src/cli.js dump <project> > p.json && node src/cli.js restore p.json
 node scripts/collect-samples.js <project>   # copy outputs into samples/
 npm test
 ```
 
-Projects live in `projects/` (git-ignored except the demo). Set `MOCKUP_PROJECTS_DIR` to keep them elsewhere.
+Projects live in `projects/` (git-ignored except the demo's screenshots). Set `MOCKUP_PROJECTS_DIR` to keep them
+elsewhere.
+
+## Data & API
+
+App info, every plan version, QA reports and run logs live in SQLite (`projects/mockups.sqlite`, override with
+`MOCKUP_DB`); only images stay on disk. Each project is one listing variant and belongs to an **app**, so all
+variants of an app can be grouped, compared and queried together. Older projects with `app.json` / `plan.json` on
+disk are imported automatically the first time they are opened.
+
+Everything the dashboard does is an HTTP call; `GET /api` lists all routes with a description, so an agent can
+discover and drive the studio end to end. See [docs/API.md](docs/API.md) for the schema, example SQL and a full
+agent session.
 
 ## Themes & layouts
 
