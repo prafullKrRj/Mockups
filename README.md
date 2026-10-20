@@ -63,6 +63,7 @@ Search projects by name, track screenshot-to-export progress, and expand generat
 | **Slide editor**: layout, screenshots and copy per slide<br>![](samples/dashboard/03-slide-editor.png) | **Previews** with a QA badge on every slide<br>![](samples/dashboard/04-previews.png) |
 | **HTML editor**: hand edits survive re-renders<br>![](samples/dashboard/05-html-editor.png) | **Export**: PNGs at 1×, 1.5× or 2×, plus a zip<br>![](samples/dashboard/06-export.png) |
 | **Store preview**: the deck at real Play thumbnail size<br>![](samples/dashboard/07-store-preview.png) | **Activity**: live job output, available to reopen after closing<br>![](samples/dashboard/08-generate-log.png) |
+| **App view**: every listing of one app grouped, compared side by side<br>![](samples/dashboard/09-app-compare.png) | |
 
 The dashboard also has **Duplicate** to try a theme on a copy, keyboard-accessible uploads and previews,
 **⌘/Ctrl + S** to save the current editor, and layouts that adapt from desktop to phone.
@@ -185,6 +186,9 @@ agents, for example `--planner codex --builder claude`. Use `--model <id>` to pi
 4. **Export**: 1× / 1.5× / 2× PNGs, per-file downloads, or a ZIP of everything. Export becomes available when previews
    exist; ZIP download becomes available after export. Repeated clicks cannot start overlapping exports.
 5. **Store preview**: a Google Play listing mock-up with your feature graphic, icon and screenshots at real size.
+6. **App view** (sidebar **Compare**, or `#app/<id>`): every listing project of one app in a table — theme,
+   generator, plan version, slides, PNGs — with editable labels and a move-to-app menu, plus a side-by-side
+   comparison of the variants you tick: swatches, feature graphic, exported slides, headlines and QA status.
 
 **Generate listing** runs the pipeline with the agents selected in **Generation settings**, which also contains
 locale, translation, model and round controls. **Activity** reopens job output; running jobs can be cancelled there.
