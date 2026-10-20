@@ -12,20 +12,28 @@ import { buildProject, deckEntries, setEntryMode } from './core/build.js';
 import { exportProject } from './core/export.js';
 import { runPipeline } from './core/pipeline.js';
 import { listAgents } from './core/agents.js';
+import { addRunEvent, createRun, finishRun, markOrphanedRuns } from './core/history.js';
+import { registerDataRoutes } from './api/data.js';
 import { PRESETS, selectedTheme, validateThemeSelection } from './templates/themes.js';
 
 const jobs = new Map(); // id → { id, project, status, lines[], listeners:Set, controller }
 
-function startJob(project, fn) {
+function startJob(project, kind, options, fn) {
   const running = [...jobs.values()].find((j) => j.project === project && j.status === 'running');
   if (running) throw Object.assign(new Error(`A job is already running for ${project}`), { status: 409 });
   const job = { id: randomUUID(), project, status: 'running', lines: [], listeners: new Set(), controller: new AbortController(), startedAt: Date.now() };
-  const emit = (ev) => { job.lines.push(ev); for (const l of job.listeners) l(ev); };
+  createRun({ id: job.id, project, kind, options });
+  const emit = (ev) => { job.lines.push(ev); addRunEvent(job.id, ev); for (const l of job.listeners) l(ev); };
   job.log = (msg, level = 'info') => emit({ t: Date.now(), level, msg: String(msg) });
   jobs.set(job.id, job);
   fn(job).then(
-    () => { job.status = 'done'; emit({ t: Date.now(), level: 'end', msg: 'done' }); },
-    (err) => { job.status = job.controller.signal.aborted ? 'cancelled' : 'failed'; job.log(err.message, 'error'); emit({ t: Date.now(), level: 'end', msg: job.status }); },
+    () => { job.status = 'done'; finishRun(job.id, 'done'); emit({ t: Date.now(), level: 'end', msg: 'done' }); },
+    (err) => {
+      job.status = job.controller.signal.aborted ? 'cancelled' : 'failed';
+      finishRun(job.id, job.status, err.message);
+      job.log(err.message, 'error');
+      emit({ t: Date.now(), level: 'end', msg: job.status });
+    },
   );
   return job;
 }
@@ -34,47 +42,54 @@ const wrap = (fn) => (req, res) => fn(req, res).catch((err) => res.status(err.st
 
 export function createApp() {
   const app = express();
+  // Every route is registered with a one-line doc so GET /api can describe the whole API to an agent.
+  const catalog = [];
+  const def = (method, route, doc, ...handlers) => {
+    catalog.push({ method: method.toUpperCase(), path: route, doc });
+    app[method](route, ...handlers);
+  };
+  markOrphanedRuns();
   app.use(express.json({ limit: '5mb' }));
   app.use(express.static(path.join(ROOT, 'dashboard')));
   // Project files (build HTML, inputs, exports) are served so iframes resolve ../input/screenshots/ paths.
   app.use('/files', express.static(PROJECTS_DIR, { dotfiles: 'deny', etag: false, lastModified: false, cacheControl: false }));
 
-  app.get('/api/meta', wrap(async (_req, res) => {
+  def('get', '/api/meta', 'Installed agent CLIs and theme presets (ids and tokens)', wrap(async (_req, res) => {
     res.json({ agents: await listAgents(), presets: Object.keys(PRESETS), presetData: PRESETS, projectsDir: PROJECTS_DIR });
   }));
 
-  app.get('/api/projects', wrap(async (_req, res) => res.json(await listProjects())));
+  def('get', '/api/projects', 'List projects with app id, label, current plan version and file counts. Query: app=<appId>', wrap(async (req, res) => res.json(await listProjects({ appId: req.query.app || undefined }))));
 
-  app.post('/api/themes/resolve', wrap(async (req, res) => {
+  def('post', '/api/themes/resolve', 'Preview the theme tokens a themeSelection resolves to', wrap(async (req, res) => {
     validateThemeSelection(req.body ?? null);
     if (req.body.mode === 'auto') return res.status(422).json({ error: 'Select a preset or Material palette to preview; AI selection uses the planner.' });
     res.json(selectedTheme({ themeSelection: req.body }));
   }));
 
-  app.post('/api/projects', wrap(async (req, res) => {
-    const p = await createProject(req.body.name, req.body.app ?? {});
+  def('post', '/api/projects', 'Create a project. Body: { name, app?, appId?, label? } — appId groups listings of one app (default: slug of packageName or name)', wrap(async (req, res) => {
+    const p = await createProject(req.body.name, req.body.app ?? {}, { appId: req.body.appId || undefined, label: req.body.label });
     res.status(201).json(serialize(p));
   }));
 
-  app.post('/api/projects/:name/duplicate', wrap(async (req, res) => {
-    const p = await duplicateProject(req.params.name, req.body.to);
+  def('post', '/api/projects/:name/duplicate', 'Copy a project (inputs, app info, current plan) as another variant of the same app. Body: { to, label? }', wrap(async (req, res) => {
+    const p = await duplicateProject(req.params.name, req.body.to, { label: req.body.label });
     if (p.plan) await buildProject(p, { force: true });
     res.status(201).json(serialize(await loadProject(req.body.to)));
   }));
 
-  app.get('/api/projects/:name', wrap(async (req, res) => {
+  def('get', '/api/projects/:name', 'Full project: app info, current plan, deck entries, validation, screenshots, latest QA, exports', wrap(async (req, res) => {
     const p = await loadProject(req.params.name);
     res.json(serialize(p));
   }));
 
-  app.put('/api/projects/:name/app', wrap(async (req, res) => {
+  def('put', '/api/projects/:name/app', 'Replace app info (copy, screens, locales, themeSelection)', wrap(async (req, res) => {
     await loadProject(req.params.name);
     await saveApp(req.params.name, req.body);
     res.json(serialize(await loadProject(req.params.name)));
   }));
 
   // Save an edited plan: validate, re-render template slides, export the changed deck.
-  app.put('/api/projects/:name/plan', wrap(async (req, res) => {
+  def('put', '/api/projects/:name/plan', 'Validate and save a plan as a new version, then re-render the deck', wrap(async (req, res) => {
     const p = await loadProject(req.params.name);
     const v = validatePlan(req.body, p);
     if (!v.ok) return res.status(422).json({ error: 'plan.json is invalid', details: v });
@@ -84,7 +99,7 @@ export function createApp() {
     res.json({ ...serialize(await loadProject(req.params.name)), validation: v });
   }));
 
-  app.post('/api/projects/:name/plan/heuristic', wrap(async (req, res) => {
+  def('post', '/api/projects/:name/plan/heuristic', 'Generate and save a heuristic (no-AI) plan and re-render', wrap(async (req, res) => {
     const p = await loadProject(req.params.name);
     const plan = heuristicPlan(p);
     savePlan(p.name, plan, 'api:heuristic');
@@ -92,7 +107,7 @@ export function createApp() {
     res.json(serialize(await loadProject(req.params.name)));
   }));
 
-  app.get('/api/projects/:name/slides/:id/html', wrap(async (req, res) => {
+  def('get', '/api/projects/:name/slides/:id/html', 'Rendered HTML of one slide. Query: locale', wrap(async (req, res) => {
     const p = await loadProject(req.params.name);
     const e = deckEntries(p.plan, p.app).find((x) => x.id === req.params.id && (!req.query.locale || x.locale === req.query.locale));
     if (!e) return res.status(404).json({ error: 'slide not found' });
@@ -100,7 +115,7 @@ export function createApp() {
   }));
 
   // Hand-edited HTML turns the slide into a custom slide so later re-renders keep it.
-  app.put('/api/projects/:name/slides/:id/html', express.text({ limit: '2mb', type: '*/*' }), wrap(async (req, res) => {
+  def('put', '/api/projects/:name/slides/:id/html', "Replace a slide's HTML (text body); the slide becomes custom", express.text({ limit: '2mb', type: '*/*' }), wrap(async (req, res) => {
     const p = await loadProject(req.params.name);
     const e = deckEntries(p.plan, p.app).find((x) => x.id === req.params.id && (!req.query.locale || x.locale === req.query.locale));
     if (!e) return res.status(404).json({ error: 'slide not found' });
@@ -111,7 +126,7 @@ export function createApp() {
     res.json(serialize(await loadProject(req.params.name)));
   }));
 
-  app.post('/api/projects/:name/slides/:id/reset', wrap(async (req, res) => {
+  def('post', '/api/projects/:name/slides/:id/reset', 'Return a custom slide to its template render', wrap(async (req, res) => {
     const p = await loadProject(req.params.name);
     const e = deckEntries(p.plan, p.app).find((x) => x.id === req.params.id && (!req.query.locale || x.locale === req.query.locale));
     if (!e) return res.status(404).json({ error: 'slide not found' });
@@ -124,7 +139,7 @@ export function createApp() {
   }));
 
   const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024, files: 30 } });
-  app.post('/api/projects/:name/upload/:kind', upload.array('files'), wrap(async (req, res) => {
+  def('post', '/api/projects/:name/upload/:kind', "Upload images (multipart field 'files'); kind = screenshots | reference | icon", upload.array('files'), wrap(async (req, res) => {
     const p = await loadProject(req.params.name);
     const kind = req.params.kind;
     if (!['screenshots', 'reference', 'icon'].includes(kind)) return res.status(400).json({ error: 'kind must be screenshots, reference or icon' });
@@ -141,7 +156,7 @@ export function createApp() {
     res.json(serialize(await loadProject(req.params.name)));
   }));
 
-  app.delete('/api/projects/:name/files/:kind/:file', wrap(async (req, res) => {
+  def('delete', '/api/projects/:name/files/:kind/:file', 'Delete a screenshot or reference image', wrap(async (req, res) => {
     const p = await loadProject(req.params.name);
     const dir = { screenshots: p.paths.screenshots, reference: p.paths.reference }[req.params.kind];
     if (!dir) return res.status(400).json({ error: 'kind must be screenshots or reference' });
@@ -149,26 +164,26 @@ export function createApp() {
     res.json(serialize(await loadProject(req.params.name)));
   }));
 
-  app.post('/api/projects/:name/run', wrap(async (req, res) => {
+  def('post', '/api/projects/:name/run', 'Start the pipeline job. Body: { steps?, planner?, translator?, builder?, rounds?, model?, scale? } → { id }', wrap(async (req, res) => {
     const name = req.params.name;
     await loadProject(name);
     const { steps, planner, translator, builder, rounds, model, scale } = req.body ?? {};
-    const job = startJob(name, (j) => runPipeline(name, { steps, planner, translator, builder, rounds: Number(rounds) || 1, model: model || undefined, scale: Number(scale) || 1, log: j.log, signal: j.controller.signal }));
+    const job = startJob(name, 'pipeline', req.body ?? {}, (j) => runPipeline(name, { steps, planner, translator, builder, rounds: Number(rounds) || 1, model: model || undefined, scale: Number(scale) || 1, log: j.log, signal: j.controller.signal }));
     res.status(202).json({ id: job.id });
   }));
 
-  app.post('/api/projects/:name/export', wrap(async (req, res) => {
+  def('post', '/api/projects/:name/export', 'Start an export + QA job. Body: { scale?, only? } → { id }', wrap(async (req, res) => {
     const name = req.params.name;
-    const job = startJob(name, async (j) => {
+    const job = startJob(name, 'export', req.body ?? {}, async (j) => {
       const p = await loadProject(name);
       await exportProject(p, { scale: Number(req.body?.scale) || 1, only: req.body?.only ?? null, log: j.log });
     });
     res.status(202).json({ id: job.id });
   }));
 
-  app.get('/api/jobs', (_req, res) => res.json([...jobs.values()].map(({ id, project, status, startedAt }) => ({ id, project, status, startedAt }))));
+  def('get', '/api/jobs', 'Jobs of this server process (live); history is in /api/runs', (_req, res) => res.json([...jobs.values()].map(({ id, project, status, startedAt }) => ({ id, project, status, startedAt }))));
 
-  app.get('/api/jobs/:id/stream', (req, res) => {
+  def('get', '/api/jobs/:id/stream', "Server-sent events of a job's log until it ends", (req, res) => {
     const job = jobs.get(req.params.id);
     if (!job) return res.status(404).end();
     res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
@@ -180,14 +195,14 @@ export function createApp() {
     req.on('close', () => job.listeners.delete(listener));
   });
 
-  app.post('/api/jobs/:id/cancel', (req, res) => {
+  def('post', '/api/jobs/:id/cancel', 'Cancel a running job', (req, res) => {
     const job = jobs.get(req.params.id);
     if (!job) return res.status(404).end();
     job.controller.abort();
     res.json({ ok: true });
   });
 
-  app.get('/api/projects/:name/download.zip', wrap(async (req, res) => {
+  def('get', '/api/projects/:name/download.zip', "ZIP of the project's exported PNGs", wrap(async (req, res) => {
     const p = projectPaths(req.params.name);
     res.attachment(`${req.params.name}-play-listing.zip`);
     const zip = new ZipArchive({ zlib: { level: 6 } });
@@ -197,10 +212,14 @@ export function createApp() {
     await zip.finalize();
   }));
 
+  registerDataRoutes(def, { wrap, serialize });
+  def('get', '/api', 'This catalog: every route with a one-line description', (_req, res) => res.json({ name: 'Mockup Studio API', routes: catalog }));
+  app.use('/api', (_req, res) => res.status(404).json({ error: 'No such API route — GET /api lists them' }));
+
   return app;
 }
 
-function serialize(p) {
+export function serialize(p) {
   const { paths, ...rest } = p;
   return { ...rest, dir: paths.dir, deck: p.plan ? deckEntries(p.plan, p.app) : [], validation: p.plan ? validatePlan(p.plan, p) : null };
 }
