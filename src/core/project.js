@@ -170,4 +170,19 @@ export async function deleteProject(name) {
   await fs.rm(p.dir, { recursive: true, force: true });
 }
 
+/** Everything the database holds about one project, as plain JSON (`mockup dump`, samples, fixtures). */
+export async function dumpProject(name) {
+  const p = await loadProject(name);
+  return { name, appId: p.appId, label: p.label, app: p.app, plan: p.plan, qa: p.qa };
+}
+
+/** Load a dump into the database (replacing the project row, keeping files on disk). */
+export async function restoreProject(dump) {
+  if (getProjectRow(dump.name)) deleteProjectRow(dump.name);
+  insertProject({ name: dump.name, app: { ...DEFAULT_APP, ...dump.app }, appId: dump.appId, label: dump.label ?? '' });
+  if (dump.plan) savePlan(dump.name, dump.plan, 'restore');
+  if (dump.qa) saveQa(dump.name, dump.qa);
+  return loadProject(dump.name);
+}
+
 export { savePlan, clearPlan };

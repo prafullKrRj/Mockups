@@ -129,6 +129,7 @@ export async function exportProject(project, { scale = 1, only = null, log = () 
     qa.slides = { ...prev.slides, ...qa.slides };
   }
   saveQa(project.name, qa);
+  await fs.mkdir(paths.runs, { recursive: true });
   for (const locale of projectLocales(project.app)) {
     await contactSheet(paths, project.app.locales ? locale : null);
   }

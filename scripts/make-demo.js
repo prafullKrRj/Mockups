@@ -1,12 +1,17 @@
-// Generates projects/demo: five synthetic Android screenshots of a fictional budgeting app + app.json.
+// Generates projects/demo: five synthetic Android screenshots of a fictional budgeting app, its app info and a plan (stored in SQLite).
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from 'playwright';
 import { projectPaths } from '../src/core/paths.js';
 import { heuristicPlan } from '../src/core/plan.js';
-import { writeJson, readJson } from '../src/core/project.js';
+import { createProject, deleteProject, savePlan } from '../src/core/project.js';
+import { getProjectRow } from '../src/core/store.js';
 
 const p = projectPaths('demo');
+// Start over on every run so the demo always matches this script; screenshots are re-rendered below.
+if (getProjectRow('demo')) await deleteProject('demo');
+await fs.rm(p.app, { force: true });
+await fs.rm(p.plan, { force: true });
 
 const css = `
 *{box-sizing:border-box;margin:0;padding:0}
@@ -73,7 +78,7 @@ for (const [file, body] of Object.entries(screens)) {
 }
 await browser.close();
 
-await writeJson(p.app, {
+const demo = await createProject('demo', {
   name: 'Paisa Calm',
   packageName: 'com.example.paisacalm',
   category: 'finance',
@@ -94,11 +99,10 @@ await writeJson(p.app, {
     '05-bills.png': { title: 'Bills', description: 'Upcoming bills with due dates and reminders', priority: 2 },
   },
   notes: 'Indian rupee amounts. Emphasise privacy (on-device) and calm.',
-});
+}, { appId: 'paisa-calm', label: 'demo' });
 console.log(`demo project written to ${p.dir}`);
 
-const app = await readJson(p.app);
-const plan = heuristicPlan({ app, screenshots: Object.keys(screens).map((file) => ({ file, width: 1080, height: 2400 })) });
+const plan = heuristicPlan({ app: demo.app, screenshots: Object.keys(screens).map((file) => ({ file, width: 1080, height: 2400 })) });
 const hiHeadlines = ['पैसे का हिसाब आसान', 'हर खर्च का बजट', 'खर्च को समझें', 'रसीद स्कैन करें', 'बिल समय पर चुकाएँ'];
 const hiSublines = ['सभी खातों का बैलेंस और लेनदेन', 'हर श्रेणी के मासिक बजट पर नज़र', 'साप्ताहिक खर्च और मुख्य श्रेणियाँ', 'रसीद स्कैन करके खर्च जोड़ें', 'आने वाले बिल और उनकी तारीखें'];
 const badgeCopy = { 'Works offline': 'ऑफ़लाइन चले', 'No ads': 'विज्ञापन नहीं', 'No sign-up': 'साइन-अप नहीं' };
@@ -110,4 +114,4 @@ plan.slides.forEach((slide, i) => {
   if (slide.badges) slide.badges = slide.badges.map((text) => pair(text, badgeCopy[text]));
 });
 plan.featureGraphic.headline = pair(plan.featureGraphic.headline, 'पैसे का हिसाब आसान');
-await writeJson(p.plan, plan);
+console.log(`demo plan v${savePlan('demo', plan, 'demo').version} saved`);
