@@ -1,3 +1,5 @@
+import { bindAppView, groupedProjectList, openApp } from './apps.js';
+
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const h = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -9,7 +11,7 @@ const DECOR = ['blobs', 'grid', 'dots', 'glow', 'rings', 'noise', 'none'];
 const CATEGORIES = ['finance', 'productivity', 'health', 'fitness', 'ai', 'social', 'food', 'travel', 'education', 'utilities', 'business', 'lifestyle', 'games', 'kids', 'music', 'weather', 'medical', 'general'];
 const COLOR_KEYS = ['bg', 'bg2', 'text', 'muted', 'accent', 'accent2', 'surface', 'surfaceText'];
 
-const state = { meta: null, project: null, name: null, plan: null, job: null, tab: 'inputs', locale: null, bust: Date.now(), appDirty: false, planDirty: false, appRevision: 0, planRevision: 0, saving: 0, opening: 0 };
+const state = { meta: null, projects: [], project: null, name: null, plan: null, job: null, tab: 'inputs', locale: null, bust: Date.now(), appDirty: false, planDirty: false, appRevision: 0, planRevision: 0, saving: 0, opening: 0 };
 
 function updateSaveStatus() {
   $('#save-status').textContent = state.saving ? 'Saving changes…' : state.appDirty || state.planDirty ? 'Unsaved changes' : 'All changes saved';
@@ -68,15 +70,36 @@ function putCopy(obj, key, value) {
 // ---------- projects ----------
 async function loadProjects() {
   const list = await api('/api/projects');
+  state.projects = list;
   $('#project-count').textContent = list.length;
-  $('#project-list').innerHTML = list.map((p) => `<a href="#${h(p.name)}" class="${p.name === state.name ? 'on' : ''}" ${p.name === state.name ? 'aria-current="page"' : ''}><span>${h(p.name)}<br><small>${h(p.appName ?? '')}</small></span><small>${p.screenshots} shots<br>${p.exported} PNGs</small></a>`).join('') || '<div class="sidebar-help">Your projects will appear here.</div>';
+  $('#project-list').innerHTML = groupedProjectList(list, state.name) || '<div class="sidebar-help">Your projects will appear here.</div>';
   filterProjects();
+  if (state.project) showAppChip();
+}
+
+function showAppChip() {
+  const siblings = state.projects.filter((p) => p.appId === state.project.appId).length;
+  $('#p-app').href = `#app/${encodeURIComponent(state.project.appId)}`;
+  $('#p-app').textContent = `App: ${state.project.appId}${siblings > 1 ? ` · compare ${siblings} listings` : ''}`;
+}
+
+// #<project> opens a project; #app/<id> opens the app's grouped listings and comparison.
+async function route() {
+  const hash = decodeURIComponent(location.hash.slice(1));
+  if (!hash) return;
+  if (!hash.startsWith('app/')) return openProject(hash);
+  await openApp(hash.slice(4), { api, toast, meta: () => state.meta, reloadProjects: loadProjects });
+  $('#empty').hidden = true;
+  $('#project').hidden = true;
+  $('#app-view').hidden = false;
+  $('#workspace-name').textContent = `App · ${hash.slice(4)}`;
 }
 
 function filterProjects() {
   const query = $('#project-search').value.trim().toLowerCase();
   const links = $$('#project-list a');
   links.forEach((link) => { link.hidden = !link.textContent.toLowerCase().includes(query); });
+  $$('#project-list .app-group').forEach((group) => { group.hidden = !$$('a', group).some((link) => !link.hidden); });
   $('#search-empty').hidden = !query || links.some((link) => !link.hidden);
 }
 
@@ -92,6 +115,7 @@ async function openProject(name) {
   state.name = name;
   setProject(project);
   $('#empty').hidden = true;
+  $('#app-view').hidden = true;
   $('#project').hidden = false;
   await loadProjects();
 }
@@ -101,6 +125,7 @@ function setProject(p) {
   const rawDraft = state.planDirty && !$('#plan-json').hidden ? $('#plan-json').value : null;
   const planDraft = state.planDirty ? rawDraft === null ? collectPlan() : state.plan : null;
   state.project = p;
+  showAppChip();
   if (!locales().includes(state.locale)) state.locale = locales()[0];
   $('#locale').innerHTML = locales().map((locale) => `<option ${locale === state.locale ? 'selected' : ''}>${h(locale)}</option>`).join('');
   state.plan = planDraft ?? (p.plan ? structuredClone(p.plan) : null);
@@ -790,9 +815,14 @@ async function init() {
   $('#job-activity').addEventListener('click', () => ($('#log-drawer').hidden = false));
   $('#log-cancel').addEventListener('click', () => { if (state.job) api(`/api/jobs/${state.job}/cancel`, { method: 'POST' }).catch((e) => toast(e.message, true)); });
 
-  window.addEventListener('hashchange', () => location.hash.length > 1 && openProject(decodeURIComponent(location.hash.slice(1))).catch((e) => toast(e.message, true)));
+  $('#project-list').addEventListener('click', (e) => {
+    const id = e.target.closest('[data-open-app]')?.dataset.openApp;
+    if (id) location.hash = `app/${encodeURIComponent(id)}`;
+  });
+  bindAppView();
+  window.addEventListener('hashchange', () => route().catch((e) => toast(e.message, true)));
   await loadProjects();
-  if (location.hash.length > 1) await openProject(decodeURIComponent(location.hash.slice(1))).catch((e) => toast(e.message, true));
+  await route().catch((e) => toast(e.message, true));
 }
 
 init().catch((e) => toast(e.message, true));
