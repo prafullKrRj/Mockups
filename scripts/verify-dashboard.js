@@ -232,8 +232,28 @@ try {
   await page.locator('#dlg-close').click();
   await page.locator('[data-tab="inputs"]').click();
   await page.screenshot({ path: '/tmp/dashboard-mobile.png', fullPage: true });
+
+  // App view: variants of one app are grouped in the sidebar, labelled, and compared side by side.
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const appId = (await (await fetch(`${base}/api/projects/launch-test`)).json()).appId;
+  await fetch(`${base}/api/projects/launch-test/duplicate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: 'launch-test-b', label: 'variant b' }) });
+  await page.goto(`${base}/#launch-test`);
+  await page.reload();
+  await page.waitForFunction(() => /compare 2 listings/.test(document.querySelector('#p-app').textContent));
+  await page.locator(`[data-open-app="${appId}"]`).click();
+  await page.waitForFunction(() => document.querySelectorAll('.compare-col').length === 2);
+  assert.equal(await page.locator('#variants tr').count(), 2);
+  await page.locator('[data-label="launch-test"]').fill('variant a');
+  await page.locator('[data-label="launch-test"]').press('Tab');
+  await page.waitForFunction(() => [...document.querySelectorAll('.compare-col b')].some((b) => b.textContent === 'variant a'));
+  await page.locator('[data-pick="launch-test-b"]').uncheck();
+  await page.waitForFunction(() => document.querySelectorAll('.compare-col').length === 1);
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `App view overflow at ${width}px`);
+  }
   assert.deepEqual(errors, []);
-  console.log('Dashboard verified: create, search, upload, counters, plan/theme, keyboard editing, guarded export, ZIP, activity, draft preservation, slow saves, project switching and layouts at 1440/768/390/320px.');
+  console.log('Dashboard verified: create, search, upload, counters, plan/theme, keyboard editing, guarded export, ZIP, activity, draft preservation, slow saves, project switching, app grouping and comparison, and layouts at 1440/768/390/320px.');
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));
