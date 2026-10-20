@@ -16,7 +16,7 @@ Read first: `design-system.md`, `guardrails.md`, `play-store-specs.md`, and `the
 3. Only for slides that need something the template cannot express, edit `build/<slide-id>.html` directly **and** set
    that slide's `"mode": "custom"` in `plan.json` (otherwise your HTML is overwritten by the re-render).
    Keep the existing structure and `data-role` attributes; change CSS, add decorative elements, adjust positions.
-4. If `.runs/qa.json` lists errors, fix them first.
+4. If the QA report in the prompt lists errors, fix them first.
 
 ## Craft checklist
 

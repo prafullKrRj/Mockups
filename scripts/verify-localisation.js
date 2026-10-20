@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -15,11 +16,13 @@ let browser;
 let server;
 try {
   await fs.mkdir(path.join(tmp, 'demo'));
-  for (const file of ['app.json', 'plan.json', 'input', 'build', 'export']) {
+  for (const file of ['input', 'build', 'export']) {
     await fs.cp(path.join(source, file), path.join(tmp, 'demo', file), { recursive: true });
   }
-  await fs.mkdir(path.join(tmp, 'demo/.runs'));
-  await fs.copyFile(path.join(source, '.runs/qa.json'), path.join(tmp, 'demo/.runs/qa.json'));
+  // The demo's app info, plan and QA live in the main database; copy them into the disposable one.
+  const dump = JSON.parse(execFileSync(process.execPath, [path.join(root, 'src/cli.js'), 'dump', 'demo'], { encoding: 'utf8', env: { ...process.env, MOCKUP_PROJECTS_DIR: '' } }));
+  const { restoreProject, savePlan } = await import('../src/core/project.js');
+  await restoreProject(dump);
   await fs.mkdir(artifacts, { recursive: true });
   const { createApp } = await import('../src/server.js');
   server = createApp().listen(0, '127.0.0.1');
@@ -32,6 +35,9 @@ try {
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('console', (msg) => { if (msg.type() === 'error') errors.push(msg.text()); });
     await page.goto(`${base}/#demo`);
+    await page.locator('#p-title').waitFor();
+    // The locale picker lives in the collapsed Generation settings panel.
+    await page.evaluate(() => { document.querySelector('.generation-settings').open = true; });
     await page.locator('#locale').waitFor();
     await page.waitForFunction(() => document.querySelector('#locale').options.length === 2);
     await page.click('[data-tab="plan"]');
@@ -87,7 +93,7 @@ try {
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Horizontal overflow at ${width}`);
     await page.close();
     // Reset disposable project before testing next viewport.
-    await fs.copyFile(path.join(source, 'plan.json'), path.join(tmp, 'demo/plan.json'));
+    savePlan('demo', dump.plan, 'verify:reset');
   }
   const zip = await fetch(`${base}/api/projects/demo/download.zip`);
   assert.equal(zip.status, 200);

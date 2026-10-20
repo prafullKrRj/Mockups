@@ -8,7 +8,7 @@ exist — `theme-replication.md`.
 
 ## Procedure
 
-1. Read `app.json`. It describes the app, its audience, and what every screenshot represents (`screens`).
+1. Read the app info (`app.json` in the prompt). It describes the app, its audience, and what every screenshot represents (`screens`).
 2. **Look at every screenshot image.** Confirm what is on it; note the UI's own colours (the theme should complement,
    not clash with, the app UI). Do not trust filenames alone.
 3. Respect `app.json.themeSelection`: `preset` and `material` lock the theme supplied in the prompt. For `auto`

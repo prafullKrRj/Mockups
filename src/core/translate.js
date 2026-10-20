@@ -23,6 +23,7 @@ export async function translateProject(project, { agentId, model, log, signal, r
     return copy;
   };
   try {
+    await writeJson(project.paths.plan, before);
     const skill = await fs.readFile(path.join(SKILLS_DIR, 'translator.md'), 'utf8');
     const result = await run({ agentId, model, log, signal, root: ROOT, project: project.paths.dir,
       prompt: `${skill}\nSource locale: ${source}. Target locales: ${locales.join(', ')}.\nCurrent plan:\n${JSON.stringify(before, null, 2)}\nWrite only plan.json.` });
@@ -44,7 +45,9 @@ export async function translateProject(project, { agentId, model, log, signal, r
     }
     return candidate;
   } catch (e) {
-    await writeJson(project.paths.plan, before);
-    throw new Error(`Translation rejected; previous plan restored: ${e.message}`, { cause: e });
+    throw new Error(`Translation rejected; previous plan kept: ${e.message}`, { cause: e });
+  } finally {
+    // The agent edits plan.json as a scratch file; the caller stores the accepted plan in the database.
+    await fs.rm(project.paths.plan, { force: true });
   }
 }

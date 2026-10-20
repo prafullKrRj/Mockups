@@ -6,7 +6,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { ROOT, PROJECTS_DIR, IMAGE_EXT, assertFileName, projectPaths } from './core/paths.js';
-import { createProject, duplicateProject, listProjects, loadProject, saveApp, writeJson } from './core/project.js';
+import { createProject, duplicateProject, listProjects, loadProject, saveApp, savePlan } from './core/project.js';
 import { validatePlan, heuristicPlan } from './core/plan.js';
 import { buildProject, deckEntries, setEntryMode } from './core/build.js';
 import { exportProject } from './core/export.js';
@@ -78,7 +78,7 @@ export function createApp() {
     const p = await loadProject(req.params.name);
     const v = validatePlan(req.body, p);
     if (!v.ok) return res.status(422).json({ error: 'plan.json is invalid', details: v });
-    await writeJson(p.paths.plan, req.body);
+    savePlan(p.name, req.body, 'api:edit');
     const fresh = await loadProject(req.params.name);
     await buildProject(fresh);
     res.json({ ...serialize(await loadProject(req.params.name)), validation: v });
@@ -87,7 +87,7 @@ export function createApp() {
   app.post('/api/projects/:name/plan/heuristic', wrap(async (req, res) => {
     const p = await loadProject(req.params.name);
     const plan = heuristicPlan(p);
-    await writeJson(p.paths.plan, plan);
+    savePlan(p.name, plan, 'api:heuristic');
     await buildProject(await loadProject(req.params.name), { force: true });
     res.json(serialize(await loadProject(req.params.name)));
   }));
@@ -107,7 +107,7 @@ export function createApp() {
     await fs.writeFile(path.join(p.paths.build, e.file), req.body);
     const plan = structuredClone(p.plan);
     setEntryMode(plan, e, 'custom', p.app);
-    await writeJson(p.paths.plan, plan);
+    savePlan(p.name, plan, `api:custom-html:${e.key}`);
     res.json(serialize(await loadProject(req.params.name)));
   }));
 
@@ -117,7 +117,7 @@ export function createApp() {
     if (!e) return res.status(404).json({ error: 'slide not found' });
     const plan = structuredClone(p.plan);
     setEntryMode(plan, e, 'template', p.app);
-    await writeJson(p.paths.plan, plan);
+    savePlan(p.name, plan, `api:reset-slide:${e.key}`);
     await fs.rm(path.join(p.paths.build, e.file), { force: true });
     await buildProject(await loadProject(req.params.name));
     res.json(serialize(await loadProject(req.params.name)));

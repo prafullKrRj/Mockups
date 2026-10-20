@@ -8,7 +8,7 @@ import sharp from 'sharp';
 const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'mockup-themes-'));
 process.env.MOCKUP_PROJECTS_DIR = path.join(tmp, 'projects');
 process.env.PATH = `${tmp}${path.delimiter}${process.env.PATH}`;
-const { createProject, loadProject, writeJson } = await import('../src/core/project.js');
+const { createProject, loadProject, saveApp, savePlan, writeJson } = await import('../src/core/project.js');
 const { heuristicPlan } = await import('../src/core/plan.js');
 const { runPipeline } = await import('../src/core/pipeline.js');
 after(() => fs.rm(tmp, { recursive: true, force: true }));
@@ -28,7 +28,7 @@ test('AI theme selection receives genre and brief, preserves existing copy and l
   const original = heuristicPlan(project);
   original.slides[0].headline = 'Keep this exact copy';
   original.slides[0].layout = 'tilted';
-  await writeJson(project.paths.plan, original);
+  savePlan('theme-test', original, 'test');
   const candidate = structuredClone(original);
   candidate.slides[0].headline = 'Agent changed the copy';
   candidate.theme = { preset: 'material-slate-dark', referenceNotes: 'Slate suits this premium finance brief.' };
@@ -43,7 +43,7 @@ test('AI theme selection receives genre and brief, preserves existing copy and l
   assert.match(prompt, /material-slate-dark/);
 
   updated.app.themeSelection = { mode: 'preset', preset: 'material-rose-light' };
-  await writeJson(updated.paths.app, updated.app);
+  await saveApp('theme-test', updated.app);
   await runPipeline('theme-test', { steps: ['plan'], planner: 'claude', log: () => {} });
   const locked = await loadProject('theme-test');
   assert.deepEqual(locked.plan.theme, { preset: 'material-rose-light' });

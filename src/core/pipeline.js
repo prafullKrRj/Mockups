@@ -1,7 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import { ROOT, SKILLS_DIR, SCHEMAS_DIR } from './paths.js';
-import { loadProject, readJson, writeJson } from './project.js';
+import { loadProject, readJson, writeJson, savePlan } from './project.js';
 import { heuristicPlan, validatePlan, referencePalette } from './plan.js';
 import { buildProject, deckEntries, setEntryMode } from './build.js';
 import { exportProject } from './export.js';
@@ -45,7 +46,7 @@ ${project.app.themeSelection?.mode && project.app.themeSelection.mode !== 'auto'
     : 'Choose a cohesive theme from app genre, description, audience, tone, screenshots and themeSelection.brief. Use reference images when supplied. Explain your choice in theme.referenceNotes.'}
 Available preset tokens (you may override tokens when selection is automatic):
 ${JSON.stringify(PRESETS)}
-${palette.length ? `\n## Measured reference palette (.runs/reference-palette.json)\n\`\`\`json\n${JSON.stringify(palette, null, 2)}\n\`\`\`\n` : ''}
+${palette.length ? `\n## Measured reference palette\n\`\`\`json\n${JSON.stringify(palette, null, 2)}\n\`\`\`\n` : ''}
 ${previousErrors ? `\n## Your previous plan.json was REJECTED by the validator. Fix every error:\n${previousErrors.map((e) => `- ${e}`).join('\n')}\n` : ''}
 Now look at every image listed, then write \`plan.json\`. Do not create or modify any other file. When done, reply with one line: PLAN WRITTEN.`;
 }
@@ -66,7 +67,7 @@ ${projectBrief(project)}
 ${JSON.stringify(project.plan, null, 2)}
 \`\`\`
 
-## Guardrail QA report (.runs/qa.json)
+## Latest guardrail QA report
 \`\`\`json
 ${qa}
 \`\`\`
@@ -104,10 +105,8 @@ export async function runPipeline(name, options = {}) {
     try {
       stage(`plan (${planner})`);
       const palette = await referencePalette(project);
-      if (palette.length) await writeJson(path.join(paths.runs, 'reference-palette.json'), palette);
       let plan = null;
       if (planner !== 'heuristic') {
-        if (project.plan) await writeJson(path.join(paths.runs, 'plan.previous.json'), project.plan);
         let previousErrors = null;
         for (let attempt = 1; attempt <= 3 && !plan; attempt++) {
           signal?.throwIfAborted();
@@ -134,18 +133,20 @@ export async function runPipeline(name, options = {}) {
       }
       plan ??= heuristicPlan(project);
       if (steps.includes('theme') && previousPlan) plan = { ...previousPlan, theme: plan.theme };
-      await writeJson(paths.plan, plan);
-      log(`plan: ${plan.slides.length} slides, theme ${plan.theme.preset}, by ${plan.generatedBy}`);
+      const { version } = savePlan(name, plan, `pipeline:${steps.includes('plan') ? 'plan' : 'theme'}:${planner}`);
+      log(`plan v${version}: ${plan.slides.length} slides, theme ${plan.theme.preset}, by ${plan.generatedBy}`);
       project = await loadProject(name);
-    } catch (error) {
-      if (previousPlan) await writeJson(paths.plan, previousPlan);
-      throw error;
+    } finally {
+      // plan.json on disk is only the agent's scratch file; the database holds the plan.
+      await fs.rm(paths.plan, { force: true });
     }
   }
 
   if (steps.includes('translate') && translator) {
     stage(`translate (${translator})`);
-    await translateProject(project, { agentId: translator, model, log, signal });
+    const translated = await translateProject(project, { agentId: translator, model, log, signal });
+    const { version } = savePlan(name, translated, `pipeline:translate:${translator}`);
+    log(`translated plan saved as v${version}`);
     project = await loadProject(name);
   }
 
@@ -174,20 +175,21 @@ export async function runPipeline(name, options = {}) {
       const exported = Object.entries(project.exportsByLocale).flatMap(([locale, files]) => ['phone', 'feature'].flatMap((kind) => files[kind].map((f) => `export/${project.app.locales ? `${locale}/` : ''}${kind}/${f}`)));
       // Contact sheet + feature graphic give the whole deck at a glance; full-size slides stay readable on disk.
       const images = ['.runs/contact-sheet.png', ...exported.filter((f) => f.includes('/feature/')), ...project.references.map((r) => `input/reference/${r.file}`)];
-      await runAgent({ agentId: builder, prompt: await builderPrompt(project, { round, exported }), project: paths.dir, root: ROOT, images, model, log, signal });
-
-      // Guardrail 1: the plan must still validate, else roll it back.
-      project = await loadProject(name).catch(async (e) => { log(`builder broke plan.json (${e.message}) — rolled back`, 'error'); await writeJson(paths.plan, planBefore); return loadProject(name); });
-      if (project.plan && typeof project.plan === 'object' && !Array.isArray(project.plan)) {
-        project.plan.theme = selectedTheme(project.app, project.plan.theme);
-        await writeJson(paths.plan, project.plan);
+      await writeJson(paths.plan, planBefore);
+      try {
+        await runAgent({ agentId: builder, prompt: await builderPrompt(project, { round, exported }), project: paths.dir, root: ROOT, images, model, log, signal });
+        // Guardrail 1: the edited plan must still validate, else the database keeps the previous version.
+        const candidate = await readJson(paths.plan, null).catch((e) => { log(`builder broke plan.json (${e.message}) — rolled back`, 'error'); return null; });
+        if (candidate && typeof candidate === 'object' && !Array.isArray(candidate)) {
+          candidate.theme = selectedTheme(project.app, candidate.theme);
+          const v = validatePlan(candidate, project);
+          if (!v.ok) log(`builder plan rejected — rolled back:\n  - ${v.errors.join('\n  - ')}`, 'error');
+          else if (!isDeepStrictEqual(candidate, planBefore)) log(`builder plan saved as v${savePlan(name, candidate, `pipeline:review:${builder}`).version}`);
+        }
+      } finally {
+        await fs.rm(paths.plan, { force: true });
       }
-      const v = project.plan ? validatePlan(project.plan, project) : { ok: false, errors: ['plan.json missing'] };
-      if (!v.ok) {
-        log(`builder plan rejected — rolled back:\n  - ${v.errors.join('\n  - ')}`, 'error');
-        await writeJson(paths.plan, planBefore);
-        project = await loadProject(name);
-      }
+      project = await loadProject(name);
       await buildProject(project);
       project = await loadProject(name);
       const { qa } = await doExport();
@@ -203,7 +205,7 @@ export async function runPipeline(name, options = {}) {
         for (const e of failed) {
           setEntryMode(plan, e, 'template', project.app);
         }
-        await writeJson(paths.plan, plan);
+        savePlan(name, plan, 'guardrail:revert-custom');
         project = await loadProject(name);
         await exportProject(project, { scale, only: failed.map((e) => e.key), log });
         project = await loadProject(name);

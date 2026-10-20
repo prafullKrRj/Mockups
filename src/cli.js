@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util';
-import { createProject, listProjects, loadProject } from './core/project.js';
+import fs from 'node:fs/promises';
+import { createProject, dumpProject, listProjects, loadProject, restoreProject } from './core/project.js';
+import { listApps } from './core/store.js';
+import { groupProjects } from './core/history.js';
+import { DB_PATH } from './core/db.js';
 import { validatePlan } from './core/plan.js';
 import { runPipeline } from './core/pipeline.js';
 import { listAgents } from './core/agents.js';
@@ -10,7 +14,11 @@ const HELP = `mockup-studio — AI Play Store listing graphics
 
 Usage:
   mockup new <project>                     create projects/<project>/ with input folders and app.json
-  mockup list                              list projects
+  mockup list [--app <id>]                 list projects (optionally of one app)
+  mockup apps                              list apps with their project, plan and run counts
+  mockup group <app|theme|generatedBy|category>  projects grouped by a dimension
+  mockup dump <project>                    print app info, current plan and QA as JSON
+  mockup restore <file.json>               load a dump into the database
   mockup agents                            show which agent CLIs are installed
   mockup run <project> [options]           plan → build → export (autonomous)
   mockup build <project>                   re-render HTML from plan.json (keeps custom slides)
@@ -27,7 +35,8 @@ Run options:
   --model <id>                             model passed to the agent CLI
   --scale <1|1.5|2>                        phone export scale (1 → 1080×1920)
 
-Projects dir: ${PROJECTS_DIR} (override with MOCKUP_PROJECTS_DIR)`;
+Projects dir: ${PROJECTS_DIR} (override with MOCKUP_PROJECTS_DIR)
+Database:     ${DB_PATH} (override with MOCKUP_DB)`;
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -39,6 +48,7 @@ const { values, positionals } = parseArgs({
     steps: { type: 'string' },
     model: { type: 'string' },
     scale: { type: 'string', default: '1' },
+    app: { type: 'string' },
     port: { type: 'string', default: process.env.PORT ?? '4280' },
     help: { type: 'boolean', short: 'h' },
   },
@@ -58,8 +68,22 @@ try {
       break;
     }
     case 'list':
-      console.table(await listProjects());
+      console.table((await listProjects({ appId: values.app })).map(({ name, appId, label, planVersion, themePreset, screenshots, exported }) => ({ name, appId, label, planVersion, themePreset, screenshots, exported })));
       break;
+    case 'apps':
+      console.table(listApps().map(({ id, name, packageName, projects, planVersions, runs }) => ({ id, name, packageName, projects, planVersions, runs })));
+      break;
+    case 'group':
+      console.table(groupProjects(name ?? 'app').map(({ names, ...g }) => ({ ...g, names: names.join(', ') })));
+      break;
+    case 'dump':
+      console.log(JSON.stringify(await dumpProject(name), null, 2));
+      break;
+    case 'restore': {
+      const p = await restoreProject(JSON.parse(await fs.readFile(name, 'utf8')));
+      console.log(`restored ${p.name} (app ${p.appId})`);
+      break;
+    }
     case 'agents':
       console.table(await listAgents());
       break;

@@ -24,7 +24,7 @@ for (const arg of names) {
   for (const f of p.exports.phone) {
     await sharp(path.join(exportDir, 'phone', f)).resize(540).png({ compressionLevel: 9 }).toFile(path.join(out, 'slides', f));
   }
-  await fs.copyFile(p.paths.plan, path.join(out, 'plan.json'));
-  await fs.copyFile(p.paths.app, path.join(out, 'app.json'));
+  await fs.writeFile(path.join(out, 'plan.json'), JSON.stringify(p.plan, null, 2) + '\n');
+  await fs.writeFile(path.join(out, 'app.json'), JSON.stringify(p.app, null, 2) + '\n');
   console.log(`samples/${alias}: deck.png, ${p.exports.feature.length} feature graphic, ${p.exports.phone.length} slides, plan.json, app.json`);
 }
