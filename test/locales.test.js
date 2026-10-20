@@ -113,8 +113,8 @@ test('translation preserves source and rejects invalid copy or structural change
     const source = structuredClone(translated);
     source.slides[0].headline['en-US'] = 'Changed source';
     for (const candidate of [invalid, changed, source, plan, null]) {
-      await assert.rejects(translateProject(p, { agentId: 'test', run: () => run(candidate) }), /previous plan restored/);
-      assert.deepEqual(JSON.parse(await fs.readFile(p.paths.plan, 'utf8')), plan);
+      await assert.rejects(translateProject(p, { agentId: 'test', run: () => run(candidate) }), /previous plan kept/);
+      await assert.rejects(fs.access(p.paths.plan), 'the scratch plan.json is removed after every attempt');
     }
     await assert.rejects(translateProject(p, { agentId: 'test', run: () => run(translated, 1) }), /exited 1/);
   } finally { await fs.rm(dir, { recursive: true, force: true }); }

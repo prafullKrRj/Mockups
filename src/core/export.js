@@ -6,7 +6,7 @@ import sharp from 'sharp';
 import { validatePlan } from './plan.js';
 import { projectLocales } from './locales.js';
 import { deckEntries } from './build.js';
-import { writeJson } from './project.js';
+import { latestQa, saveQa } from './history.js';
 
 const MAX_BYTES = 8 * 1024 * 1024;
 const ALLOWED_HOSTS = new Set(['fonts.googleapis.com', 'fonts.gstatic.com']);
@@ -125,10 +125,10 @@ export async function exportProject(project, { scale = 1, only = null, log = () 
     await browser.close();
   }
   if (only) {
-    const prev = JSON.parse(await fs.readFile(path.join(paths.runs, 'qa.json'), 'utf8').catch(() => '{"slides":{}}'));
+    const prev = latestQa(project.name) ?? { slides: {} };
     qa.slides = { ...prev.slides, ...qa.slides };
   }
-  await writeJson(path.join(paths.runs, 'qa.json'), qa);
+  saveQa(project.name, qa);
   for (const locale of projectLocales(project.app)) {
     await contactSheet(paths, project.app.locales ? locale : null);
   }
